@@ -94,7 +94,7 @@ void drawLine(unsigned char* buffer, int x1, int y1, int x2, int y2) {
             std::swap(x1, x2);
             std::swap(y1, y2);
         }
-        for (int x = x1; x <= x2; ++x) {
+        for (int x = std::max(x1,0); x <= std::min(x2,size_x-1); ++x) {
             int y = static_cast<int>(y1 + slope * (x - x1));
             DrawPixel(buffer, x, y);
         }
@@ -104,7 +104,7 @@ void drawLine(unsigned char* buffer, int x1, int y1, int x2, int y2) {
             std::swap(x1, x2);
             std::swap(y1, y2);
         }
-        for (int y = y1; y <= y2; ++y) {
+        for (int y = std::max(0, y1); y <= std::min(y2, size_y-1); ++y) {
             int x = static_cast<int>(x1 + (y - y1) / slope);
             DrawPixel(buffer, x, y);
         }
@@ -135,10 +135,10 @@ void UpdateBuffer(unsigned char* buffer){
     //pitch = seconds;
     //yaw = 3.2*seconds;
     rotate_test = rotate_test + 0.001;
-    //pitch = 2*M_PI*sin(rotate_test);
-    //yaw = rotate_test;
-    //roll = rotate_test*1.3;
-    z = -10;
+    pitch = rotate_test/8;
+    yaw = rotate_test;
+    roll = rotate_test*1.3;
+    z = -20 + 20*cos(rotate_test);
     //x = cos(rotate_test*100);
     //y = sin(rotate_test*100);
     teapot.setLocation(x,y,z);
@@ -232,7 +232,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_PAINT:
         {
+            auto start_time = std::chrono::high_resolution_clock::now();
             PushBuffer(hwnd);
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            std::cout << duration <<" mS" << "\r" << std::flush;
         }
         break;
         case WM_CLOSE:
