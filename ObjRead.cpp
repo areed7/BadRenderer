@@ -24,7 +24,7 @@ void tokenizer(string input, vector<string>& parsedStr, char token){
     }
 }
 
-void ReadObj(const char* name, vector<vert>& verts){
+void ReadObj(const char* name, mesh& m){
     ifstream objFile(name);
     string line;
     if( objFile.is_open()){
@@ -33,9 +33,20 @@ void ReadObj(const char* name, vector<vert>& verts){
             if(line[0] == 'v'){
                 vector<string> tokens;
                 tokenizer(line, tokens, ' ');
-                verts.push_back(vert(stod(tokens[1]), stod(tokens[2]), stod(tokens[3]), 1));
+                m.verts.push_back(vert(stod(tokens[1]), stod(tokens[2]), stod(tokens[3]), 1));
             }
-            
+
+            if(line[0] == 'f'){
+                vector<string> tokens;
+                
+                tokenizer(line, tokens, ' ');
+                
+                vector<int> face;
+                for( int i = 1; i < tokens.size(); i++){
+                    face.push_back(stoi(tokens[i])-1);
+                }
+                m.faces.push_back(face);
+            }
         }
         objFile.close();
     }
@@ -43,14 +54,19 @@ void ReadObj(const char* name, vector<vert>& verts){
 
 /*
 int main(){
-    vector<vert> verts;
-    ReadObj("teapot.obj", verts);
+    mesh teapot;
+    ReadObj("teapot.obj", teapot);
     //vector<string> parsedStr;
     //string test = "v -2.976687 1.920243 -0.081000";
     //tokenizer(test, parsedStr, ' ');
 
-    for( int i = 0; i < 10; i++){
-        cout << verts[i].x << " " << verts[i].y << " " << verts[i].z << endl;
+    for( int fi = 0; fi < teapot.faces.size(); fi++){
+        vector<int> tmp = teapot.faces[fi];
+        for (int vi = 0; vi < tmp.size(); vi++){
+            std::cout << tmp[vi] << " ";
+        }
+        std::cout << std::endl;
     }
+    
     return 0;
 }*/

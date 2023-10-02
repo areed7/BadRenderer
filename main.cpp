@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <cmath>
-//#include "BaseStructures.h"
+#include "BaseStructures.h"
 #include "ObjRead.h"
 #include "BaseStructures.h"
 #include <vector>
@@ -18,14 +18,13 @@ const int size_x = 1000;
 const int size_y = 1000;
 double rotate_test = 0;
 unsigned char* frameBuffer;
-// Step 4: the Window Procedure
 
 void UpdateBuffer(unsigned char* buffer);
 void RandomDraw(unsigned char* buffer, int size_x, int size_y);
 void drawLine(unsigned char* buffer, int x1, int y1, int x2, int y2);
 
-
- std::vector<vert> verts;
+mesh teapot;
+std::vector<vert> verts;
 
 void RandomDraw(unsigned char* buffer, int x1, int y1, int x2, int y2){
     
@@ -45,7 +44,7 @@ void PushBuffer(HWND hwnd){
     BITMAPINFO bmpInfo;
     bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
     bmpInfo.bmiHeader.biWidth = size_x;
-    bmpInfo.bmiHeader.biHeight = size_y;  // Top-down
+    bmpInfo.bmiHeader.biHeight = size_y;
     bmpInfo.bmiHeader.biPlanes = 1;
     bmpInfo.bmiHeader.biBitCount = 24;  // 8-bit per pixel (As in. 8 bits for R, 8 Bits for G and 8 bits for B. For a total of 24)
     bmpInfo.bmiHeader.biCompression = BI_RGB;
@@ -76,25 +75,38 @@ void ClearBuffer( unsigned char* buffer, int size_x, int size_y){
 
 //Bresenham's line algorithm
 void drawLine(unsigned char* buffer, int x1, int y1, int x2, int y2) {
-    int dx = abs(x2 - x1);
-    int sx = x1 < x2 ? 1 : -1;
-    int dy = -abs(y2 - y1);
-    int sy = y1 < y2 ? 1 : -1;
-    int error = dx + dy;
-    
-    while(1){
-        DrawPixel(buffer, x1, y1);
-        if( x1 == x2 && y1 == y2 ) break;
-        int e2 = 2 * error;
-        if (e2 >= dy){
-            if (x1 == x2) break;
-            error = error + dy;
-            x1 = x1 + sx;
+    // Check if the line is vertical
+    if (x2 == x1) {
+        int yStart = std::min(y1, y2);
+        int yEnd = std::max(y1, y2);
+        for (int y = yStart; y <= yEnd; ++y) {
+            DrawPixel(buffer, x1, y);
         }
-        if(e2 <= dx){
-            if(y1 == y2) break;
-            error = error + dx;
-            y1 = y1 + sy;
+        return;
+    }
+
+    // Calculate slope
+    double slope = static_cast<double>(y2 - y1) / (x2 - x1);
+
+    // Check if the absolute slope is <= 1 (i.e., not too steep)
+    if (std::abs(slope) <= 1.0) {
+        if (x1 > x2) {
+            std::swap(x1, x2);
+            std::swap(y1, y2);
+        }
+        for (int x = x1; x <= x2; ++x) {
+            int y = static_cast<int>(y1 + slope * (x - x1));
+            DrawPixel(buffer, x, y);
+        }
+    } else {
+        // Handle steep slopes (loop over y values)
+        if (y1 > y2) {
+            std::swap(x1, x2);
+            std::swap(y1, y2);
+        }
+        for (int y = y1; y <= y2; ++y) {
+            int x = static_cast<int>(x1 + (y - y1) / slope);
+            DrawPixel(buffer, x, y);
         }
     }
 }
@@ -123,30 +135,14 @@ void UpdateBuffer(unsigned char* buffer){
     //pitch = seconds;
     //yaw = 3.2*seconds;
     rotate_test = rotate_test + 0.001;
-    pitch = 2*M_PI*sin(rotate_test);
-    yaw = rotate_test;
+    //pitch = 2*M_PI*sin(rotate_test);
+    //yaw = rotate_test;
     //roll = rotate_test*1.3;
-    z = -30 + 60*cos(rotate_test);
-    x = cos(rotate_test*100);
-    y = sin(rotate_test*100);
-    Matrix4x4 boxTransform;
-    boxTransform.data[0][0] = cos(yaw) * cos(roll);
-    boxTransform.data[0][1] = cos(roll) * sin(pitch) * sin(yaw) - cos(pitch) * sin(roll);
-    boxTransform.data[0][2] = cos(pitch) * cos(roll) * sin(yaw) + sin(pitch) * sin(roll);
-    boxTransform.data[0][3] = x;
-
-    boxTransform.data[1][0] = cos(yaw) * sin(roll);
-    boxTransform.data[1][1] = cos(pitch) * cos(roll) + sin(pitch) * sin(yaw) * sin(roll);
-    boxTransform.data[1][2] = cos(pitch) * sin(yaw) * sin(roll) - cos(roll) * sin(pitch);
-    boxTransform.data[1][3] = y;
-
-    boxTransform.data[2][0] = -sin(yaw);
-    boxTransform.data[2][1] = cos(yaw) * sin(pitch);
-    boxTransform.data[2][2] = cos(pitch) * cos(yaw);
-    boxTransform.data[2][3] = z;
-    boxTransform.data[3][3] = 1;
-
-    
+    z = -10;
+    //x = cos(rotate_test*100);
+    //y = sin(rotate_test*100);
+    teapot.setLocation(x,y,z);
+    teapot.setRotation(pitch,yaw,roll);
 
 
     Matrix4x4 projectionMatrix;
@@ -158,6 +154,8 @@ void UpdateBuffer(unsigned char* buffer){
     projectionMatrix.data[3][3] = 0.0;
     //Lets just create a face and try to draw it.
    
+
+    //Cube.
     /*verts.push_back(vert(1,1,-1,1));
     verts.push_back(vert(-1,1,-1,1));
     verts.push_back(vert(1,-1,-1,1));
@@ -174,10 +172,33 @@ void UpdateBuffer(unsigned char* buffer){
     
     vert last_pixel;
     
+    for( auto &face_i : teapot.faces){
+        for(int i = 0; i < face_i.size(); i++){
+            vert transformed_vert_a = teapot.transform*teapot.verts[face_i[i]];
+            vert screen_res_a = projectionMatrix*transformed_vert_a;
+           
+            screen_res_a.x /= screen_res_a.w;
+            screen_res_a.y /= screen_res_a.w;
+            screen_res_a.z /= screen_res_a.w;
+            screen_res_a.x = ((screen_res_a.x+1.0)/2.0)*size_x;
+            screen_res_a.y = ((screen_res_a.y+1.0)/2.0)*size_y;
+            //DrawPixel(buffer, screen_res_a.x, screen_res_a.y);
+            
+            vert transformed_vert_b = teapot.transform*teapot.verts[face_i[(i+1)%face_i.size()]];
+            vert screen_res_b = projectionMatrix*transformed_vert_b;
 
-    std::vector<vert> screen_verts;
-    for( auto &vert_i : verts){
-        vert transformed_vert = boxTransform*vert_i;
+            screen_res_b.x /= screen_res_b.w;
+            screen_res_b.y /= screen_res_b.w;
+            screen_res_b.z /= screen_res_b.w;
+            screen_res_b.x = ((screen_res_b.x+1.0)/2.0)*size_x;
+            screen_res_b.y = ((screen_res_b.y+1.0)/2.0)*size_y;
+            drawLine(buffer, (int)screen_res_a.x, (int)screen_res_a.y, (int)screen_res_b.x, (int)screen_res_b.y);
+        }
+    }
+
+    //std::vector<vert> screen_verts;
+    /*for( auto &vert_i : teapot.verts){
+        vert transformed_vert = teapot.transform*vert_i;
         vert screen_res = projectionMatrix*transformed_vert;
         //std::cout << "X: " << screen_res.x << " Y: " << screen_res.y << std::endl;
         
@@ -190,7 +211,7 @@ void UpdateBuffer(unsigned char* buffer){
         DrawPixel(buffer, screen_res.x, screen_res.y);
         //drawLine(buffer, (int)screen_res.x, (int)screen_res.y, (int)last_pixel.x, (int)last_pixel.y);
         //screen_verts.push_back(screen_res);
-    }
+    }*/
 
     /*for( int i = 0 ; i < screen_verts.size(); i++ ){
         for( int j = 0; j < screen_verts.size(); j++){
@@ -198,6 +219,10 @@ void UpdateBuffer(unsigned char* buffer){
         }
     }*/
 
+}
+
+void Init(){
+    ReadObj("teapot.obj", teapot);
 }
 
 
@@ -223,6 +248,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
+
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     LPSTR lpCmdLine, int nCmdShow)
@@ -272,7 +298,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
-    ReadObj("teapot.obj", verts);
+    
+    Init();
     bool isRunning = true;
     while (isRunning){
         while(PeekMessage(&Msg, NULL, 0,0,PM_REMOVE))

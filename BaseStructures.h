@@ -88,15 +88,16 @@ struct Matrix4x4{
 
 struct mesh{
     std::vector<vert> verts;
-    std::vector<int> faces; //Index of verts that are connected (Draw lines for each of these)
+    std::vector<std::vector<int>> faces; //Index of verts that are connected (Draw lines for each of these)
     Matrix4x4 transform;
-
-    void setLocation(int x, int y, int z){
+    
+    void setLocation(double x, double y, double z){
         transform.data[0][3] = x;
         transform.data[1][3] = y;
         transform.data[2][3] = z;
+        transform.data[3][3] = 1;
     }
-    void setRotation(int pitch, int yaw, int roll){
+    void setRotation(double pitch, double yaw, double roll){
         
         double cy = cos(yaw);
         double cr = cos(roll);
@@ -116,5 +117,6 @@ struct mesh{
         transform.data[2][0] = -sy;
         transform.data[2][1] = cy * sp;
         transform.data[2][2] = cp * cy;
+        transform.data[3][3] = 1;
     }
 };
