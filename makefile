@@ -1,0 +1,1 @@
+g++ main.cpp ObjRead.cpp -o main -lgdi32
