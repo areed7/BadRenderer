@@ -137,17 +137,17 @@ void UpdateBuffer(unsigned char* buffer){
     //pitch = seconds;
     //yaw = 3.2*seconds;
     rotate_test = rotate_test + 0.001;
-    pitch = rotate_test/8;
-    yaw = rotate_test;
-    roll = rotate_test*1.3;
+    //pitch = rotate_test/8;
+    //yaw = rotate_test;
+    //roll = rotate_test*1.3;
     z = -10;
     //x = cos(rotate_test*2);
     //y = rotate_test;
     //teapot.setLocation(x,y,z);
     //teapot.setRotation(pitch,yaw,roll);
 
-    cube.setLocation(x,y,z);
-    cube.setRotation(pitch*3, yaw*1.5, roll*2);
+    cube.setLocation(x,y-1.5,z);
+    cube.setRotation(2*M_PI*sin(rotate_test), 2*2*M_PI*cos(rotate_test), 0);
 
     Matrix4x4 projectionMatrix;
     projectionMatrix.data[0][0] = 1.0 / (aspectRatio * std::tan(fov/2.0));
@@ -158,12 +158,12 @@ void UpdateBuffer(unsigned char* buffer){
     projectionMatrix.data[3][3] = 0.0;
     //Lets just create a face and try to draw it.
    
-    vert camPos(0,0,120,0), camtarget(0,0,-1,0);
+    vert camPos(0,0,0,0), camtarget(0,0,-1,0);
     //camPos = vert(0,rotate_test,0,0);
-    //camtarget = vert(4*sin(rotate_test*4),4*cos(rotate_test*4),z,0);
-    vert forward = (camPos-camtarget).normalize();
-    vert right = vert(0,1,0,0).cross(forward);
-    vert up    = forward.cross(right);
+    //camtarget       = vert(4*sin(rotate_test*4),4*cos(rotate_test*4),z,0);
+    vert forward    = (camPos-camtarget).normalize();
+    vert right      = vert(0,1,0,0).cross(forward);
+    vert up         = forward.cross(right);
 
     /*
     | Right_x   Right_y   Right_z  -dot(Right, Eye)  |
@@ -220,7 +220,7 @@ void UpdateBuffer(unsigned char* buffer){
                 double l = sqrt(norm.x*norm.x + norm.y*norm.y + norm.z*norm.z);
                 norm = norm/l;
                 double dot = norm.x * (v1.x-camPos.x) + norm.y*(v1.y-camPos.y) + norm.z*(v1.z-camPos.z);
-                if(dot < 0.0)
+                if(dot > 0.0)
                 {
                     vert s1 = projectionMatrix*v1;
                     s1 = s1/s1.w;
@@ -238,7 +238,7 @@ void UpdateBuffer(unsigned char* buffer){
                     drawLine(buffer, (int)s2.x, (int)s2.y, (int)s3.x, (int)s3.y);
                     drawLine(buffer, (int)s3.x, (int)s3.y, (int)s1.x, (int)s1.y);
                 }
-            } /*else {
+            } else {
                 for(int i = 0; i < face_i.size(); i++){
                     
                     
@@ -273,7 +273,7 @@ void UpdateBuffer(unsigned char* buffer){
                         drawLine(buffer, (int)screen_res_a.x, (int)screen_res_a.y, (int)screen_res_b.x, (int)screen_res_b.y);
                     }
                 }
-            }*/
+            }
         }
     }
 }
@@ -281,7 +281,7 @@ void UpdateBuffer(unsigned char* buffer){
 void Init(){
     //ReadObj("teapot.obj", teapot);
     //meshes.push_back(&teapot);
-    ReadObj("cube.obj", cube);
+    ReadObj("teapot.obj", cube);
     meshes.push_back(&cube);
 }
 
