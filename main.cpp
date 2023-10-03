@@ -158,15 +158,12 @@ void UpdateBuffer(unsigned char* buffer){
     projectionMatrix.data[3][3] = 0.0;
     //Lets just create a face and try to draw it.
    
-    vert camPos(0,0,5*sin(rotate_test),0), camtarget(0,0,-1,0);
+    vert camPos(0,0,0,0), camtarget(0,0,-1,0);
     //camPos = vert(0,rotate_test,0,0);
-    //camtarget = vert(x,y,z,0);
-    vert forward = (camtarget-camPos).normalize();
-
-    vert worldUp(0,1,0,0);
-    vert right = worldUp.cross(forward).normalize();
-
-    vert up = forward.cross(right).normalize();
+    camtarget = vert(4*sin(rotate_test*4),4*cos(rotate_test*4),z,0);
+    vert forward = (camPos-camtarget).normalize();
+    vert right = vert(0,1,0,0).cross(forward);
+    vert up    = forward.cross(right);
 
     /*
     | Right_x   Right_y   Right_z  -dot(Right, Eye)  |
