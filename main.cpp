@@ -146,7 +146,7 @@ void UpdateBuffer(unsigned char* buffer){
     //teapot.setLocation(x,y,z);
     //teapot.setRotation(pitch,yaw,roll);
 
-    cube.setLocation(4*sin(rotate_test*4),4*cos(rotate_test*4),z);
+    cube.setLocation(x,y,z);
     cube.setRotation(pitch*3, yaw*1.5, roll*2);
 
     Matrix4x4 projectionMatrix;
@@ -158,9 +158,9 @@ void UpdateBuffer(unsigned char* buffer){
     projectionMatrix.data[3][3] = 0.0;
     //Lets just create a face and try to draw it.
    
-    vert camPos(0,0,0,0), camtarget(0,0,-1,0);
+    vert camPos(0,0,120,0), camtarget(0,0,-1,0);
     //camPos = vert(0,rotate_test,0,0);
-    camtarget = vert(4*sin(rotate_test*4),4*cos(rotate_test*4),z,0);
+    //camtarget = vert(4*sin(rotate_test*4),4*cos(rotate_test*4),z,0);
     vert forward = (camPos-camtarget).normalize();
     vert right = vert(0,1,0,0).cross(forward);
     vert up    = forward.cross(right);
@@ -186,11 +186,11 @@ void UpdateBuffer(unsigned char* buffer){
     viewMatrix.data[2][0] = -forward.x;
     viewMatrix.data[2][1] = -forward.y;
     viewMatrix.data[2][2] = -forward.z;
-    viewMatrix.data[2][3] = forward.dot(camPos);
+    viewMatrix.data[2][3] = -forward.dot(camPos);
 
-    viewMatrix.data[0][3] = 0;
-    viewMatrix.data[1][3] = 0;
-    viewMatrix.data[2][3] = 0;
+    viewMatrix.data[3][0] = 0;
+    viewMatrix.data[3][1] = 0;
+    viewMatrix.data[3][2] = 0;
     viewMatrix.data[3][3] = 1;
     //Lets try a view matrix FPS camera:
     float camPitch = 0, sinPitch = 0, cosYaw = 0, sinyaw = 0;
@@ -220,7 +220,7 @@ void UpdateBuffer(unsigned char* buffer){
                 double l = sqrt(norm.x*norm.x + norm.y*norm.y + norm.z*norm.z);
                 norm = norm/l;
                 double dot = norm.x * (v1.x-camPos.x) + norm.y*(v1.y-camPos.y) + norm.z*(v1.z-camPos.z);
-                if(dot > 0.0)
+                if(dot < 0.0)
                 {
                     vert s1 = projectionMatrix*v1;
                     s1 = s1/s1.w;
