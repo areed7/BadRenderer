@@ -42,7 +42,22 @@ struct vert{
     vert operator/(double scalar) const {
         return vert(x/scalar, y/scalar, z/scalar, w/scalar);
     }
+    vert cross(const vert& other) const{
+        return vert(y*other.z-z*other.y, z*other.x-x*other.z, x*other.y-y*other.x, 0);
+    }
 
+    vert normalize() const{
+        double l = sqrt(x*x + y*y + z*z + w*w);
+        if(l!=0){
+            return vert(x/l, y/l, z/l, w/l);
+        } else{
+            return vert(x,y,z,w);
+        }
+    }
+
+    double dot(const vert& other) const{
+        return x*other.x + y*other.y + z*other.z +w*other.w;
+    }
 };
 
 

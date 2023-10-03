@@ -140,13 +140,13 @@ void UpdateBuffer(unsigned char* buffer){
     pitch = rotate_test/8;
     yaw = rotate_test;
     roll = rotate_test*1.3;
-    z = -20 + 20*cos(rotate_test);
-    //x = cos(rotate_test*100);
-    //y = sin(rotate_test*100);
+    z = -10;
+    //x = cos(rotate_test*2);
+    //y = rotate_test;
     //teapot.setLocation(x,y,z);
     //teapot.setRotation(pitch,yaw,roll);
 
-    cube.setLocation(x,y,z);
+    cube.setLocation(4*sin(rotate_test*4),4*cos(rotate_test*4),z);
     cube.setRotation(pitch*3, yaw*1.5, roll*2);
 
     Matrix4x4 projectionMatrix;
@@ -158,7 +158,47 @@ void UpdateBuffer(unsigned char* buffer){
     projectionMatrix.data[3][3] = 0.0;
     //Lets just create a face and try to draw it.
    
+    vert camPos(0,0,5*sin(rotate_test),0), camtarget(0,0,-1,0);
+    //camPos = vert(0,rotate_test,0,0);
+    //camtarget = vert(x,y,z,0);
+    vert forward = (camtarget-camPos).normalize();
 
+    vert worldUp(0,1,0,0);
+    vert right = worldUp.cross(forward).normalize();
+
+    vert up = forward.cross(right).normalize();
+
+    /*
+    | Right_x   Right_y   Right_z  -dot(Right, Eye)  |
+| Up_x      Up_y      Up_z     -dot(Up, Eye)     |
+| -Forward_x -Forward_y -Forward_z -dot(Forward, Eye) |
+| 0        0        0        1           |*/
+    //double dot = norm.x * t1.x + norm.y*t1.y + norm.z*t1.z;
+    
+    Matrix4x4 viewMatrix;
+    viewMatrix.data[0][0] = right.x;
+    viewMatrix.data[0][1] = right.y;
+    viewMatrix.data[0][2] = right.z;
+    viewMatrix.data[0][3] = -right.dot(camPos);
+
+    viewMatrix.data[1][0] = up.x;
+    viewMatrix.data[1][1] = up.y;
+    viewMatrix.data[1][2] = up.z;
+    viewMatrix.data[1][3] = -up.dot(camPos);
+
+    viewMatrix.data[2][0] = -forward.x;
+    viewMatrix.data[2][1] = -forward.y;
+    viewMatrix.data[2][2] = -forward.z;
+    viewMatrix.data[2][3] = forward.dot(camPos);
+
+    viewMatrix.data[0][3] = 0;
+    viewMatrix.data[1][3] = 0;
+    viewMatrix.data[2][3] = 0;
+    viewMatrix.data[3][3] = 1;
+    //Lets try a view matrix FPS camera:
+    float camPitch = 0, sinPitch = 0, cosYaw = 0, sinyaw = 0;
+
+    
     
     //Loop though each mesh and draw.
     for( auto &mesh_i : meshes){
@@ -166,29 +206,34 @@ void UpdateBuffer(unsigned char* buffer){
             if( face_i.size() == 3)
             {
                 vert t1, t2, t3;
-                t1 = (*mesh_i).transform*(*mesh_i).verts[face_i[0]];
-                t2 = (*mesh_i).transform*(*mesh_i).verts[face_i[1]];
-                t3 = (*mesh_i).transform*(*mesh_i).verts[face_i[2]];
+                t1 = (mesh_i->transform*mesh_i->verts[face_i[0]]);
+                t2 = (mesh_i->transform*mesh_i->verts[face_i[1]]);
+                t3 = (mesh_i->transform*mesh_i->verts[face_i[2]]);
+                vert v1, v2, v3;
+                v1 = viewMatrix*t1;
+                v2 = viewMatrix*t2;
+                v3 = viewMatrix*t3;
+
                 vert norm, l1, l2;
-                l1 = t2-t1;
-                l2 = t3-t1;
+                l1 = v2-v1;
+                l2 = v3-v1;
                 norm.x = l1.y*l2.z - l1.z*l2.y;
                 norm.y = l1.z*l2.x - l1.x*l2.z;
                 norm.z = l1.x*l2.y - l1.y*l2.x;
                 double l = sqrt(norm.x*norm.x + norm.y*norm.y + norm.z*norm.z);
                 norm = norm/l;
-                double dot = norm.x * t1.x + norm.y*t1.y + norm.z*t1.z;
-                if(dot < 0.0)
+                double dot = norm.x * (v1.x-camPos.x) + norm.y*(v1.y-camPos.y) + norm.z*(v1.z-camPos.z);
+                if(dot > 0.0)
                 {
-                    vert s1 = projectionMatrix*t1;
+                    vert s1 = projectionMatrix*v1;
                     s1 = s1/s1.w;
                     s1.x = ((s1.x+1.0)/2.0)*size_x;
                     s1.y = ((s1.y+1.0)/2.0)*size_y;
-                    vert s2 = projectionMatrix*t2;
+                    vert s2 = projectionMatrix*v2;
                     s2 = s2/s2.w;
                     s2.x = ((s2.x+1.0)/2.0)*size_x;
                     s2.y = ((s2.y+1.0)/2.0)*size_y;
-                    vert s3 = projectionMatrix*t3;
+                    vert s3 = projectionMatrix*v3;
                     s3 = s3/s3.w;
                     s3.x = ((s3.x+1.0)/2.0)*size_x;
                     s3.y = ((s3.y+1.0)/2.0)*size_y;
