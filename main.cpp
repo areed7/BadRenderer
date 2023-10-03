@@ -238,7 +238,7 @@ void UpdateBuffer(unsigned char* buffer){
                     drawLine(buffer, (int)s2.x, (int)s2.y, (int)s3.x, (int)s3.y);
                     drawLine(buffer, (int)s3.x, (int)s3.y, (int)s1.x, (int)s1.y);
                 }
-            } else {
+            } /*else {
                 for(int i = 0; i < face_i.size(); i++){
                     
                     
@@ -273,7 +273,7 @@ void UpdateBuffer(unsigned char* buffer){
                         drawLine(buffer, (int)screen_res_a.x, (int)screen_res_a.y, (int)screen_res_b.x, (int)screen_res_b.y);
                     }
                 }
-            }
+            }*/
         }
     }
 }
