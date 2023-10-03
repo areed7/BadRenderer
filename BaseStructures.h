@@ -31,8 +31,16 @@ struct vert{
         return vert(x+other.x, y+other.y, z+other.z, w+other.w);
     }
 
+    vert operator-(const vert& other) const{
+        return vert(x-other.x, y-other.y, z-other.z, w-other.w);
+    }
+
     vert operator*(double scalar) const {
         return vert(x*scalar, y*scalar, z*scalar, w*scalar);
+    }
+
+    vert operator/(double scalar) const {
+        return vert(x/scalar, y/scalar, z/scalar, w/scalar);
     }
 
 };

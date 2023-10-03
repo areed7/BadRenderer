@@ -24,8 +24,12 @@ void RandomDraw(unsigned char* buffer, int size_x, int size_y);
 void drawLine(unsigned char* buffer, int x1, int y1, int x2, int y2);
 
 mesh teapot;
-std::vector<vert> verts;
+mesh cube;
 
+//Pointers to all meshes that will be drawn.
+std::vector<mesh*> meshes;
+
+//Just leftovers to verify that I can write to the screen.
 void RandomDraw(unsigned char* buffer, int x1, int y1, int x2, int y2){
     
     for( int x = x1; x != x2; x++){
@@ -39,6 +43,7 @@ void RandomDraw(unsigned char* buffer, int x1, int y1, int x2, int y2){
     }
 }
 
+//Push the data to the screen.
 void PushBuffer(HWND hwnd){
     
     BITMAPINFO bmpInfo;
@@ -119,9 +124,6 @@ void drawLine(unsigned char* buffer, int x1, int y1, int x2, int y2) {
 */
 void UpdateBuffer(unsigned char* buffer){
     ClearBuffer(buffer, size_x, size_y);
-    //DrawPixel(buffer, 800, 250);
-    //DrawPixel(buffer, 250, 250);
-    //drawLine(buffer, 0,0,size_x-1, size_y-1);
 
     double zfar = 10000;
     double znear = 0.1;
@@ -141,9 +143,11 @@ void UpdateBuffer(unsigned char* buffer){
     z = -20 + 20*cos(rotate_test);
     //x = cos(rotate_test*100);
     //y = sin(rotate_test*100);
-    teapot.setLocation(x,y,z);
-    teapot.setRotation(pitch,yaw,roll);
+    //teapot.setLocation(x,y,z);
+    //teapot.setRotation(pitch,yaw,roll);
 
+    cube.setLocation(x,y,z);
+    cube.setRotation(pitch*3, yaw*1.5, roll*2);
 
     Matrix4x4 projectionMatrix;
     projectionMatrix.data[0][0] = 1.0 / (aspectRatio * std::tan(fov/2.0));
@@ -155,74 +159,88 @@ void UpdateBuffer(unsigned char* buffer){
     //Lets just create a face and try to draw it.
    
 
-    //Cube.
-    /*verts.push_back(vert(1,1,-1,1));
-    verts.push_back(vert(-1,1,-1,1));
-    verts.push_back(vert(1,-1,-1,1));
-    verts.push_back(vert(-1,-1,-1,1));
-    verts.push_back(vert(1,1,1,1));
-    verts.push_back(vert(-1,1,1,1));
-    verts.push_back(vert(1,-1,1,1));
-    verts.push_back(vert(-1,-1,1,1));
-    */
     
+    //Loop though each mesh and draw.
+    for( auto &mesh_i : meshes){
+        for( auto &face_i : (*mesh_i).faces){
+            if( face_i.size() == 3)
+            {
+                vert t1, t2, t3;
+                t1 = (*mesh_i).transform*(*mesh_i).verts[face_i[0]];
+                t2 = (*mesh_i).transform*(*mesh_i).verts[face_i[1]];
+                t3 = (*mesh_i).transform*(*mesh_i).verts[face_i[2]];
+                vert norm, l1, l2;
+                l1 = t2-t1;
+                l2 = t3-t1;
+                norm.x = l1.y*l2.z - l1.z*l2.y;
+                norm.y = l1.z*l2.x - l1.x*l2.z;
+                norm.z = l1.x*l2.y - l1.y*l2.x;
+                double l = sqrt(norm.x*norm.x + norm.y*norm.y + norm.z*norm.z);
+                norm = norm/l;
+                double dot = norm.x * t1.x + norm.y*t1.y + norm.z*t1.z;
+                if(dot < 0.0)
+                {
+                    vert s1 = projectionMatrix*t1;
+                    s1 = s1/s1.w;
+                    s1.x = ((s1.x+1.0)/2.0)*size_x;
+                    s1.y = ((s1.y+1.0)/2.0)*size_y;
+                    vert s2 = projectionMatrix*t2;
+                    s2 = s2/s2.w;
+                    s2.x = ((s2.x+1.0)/2.0)*size_x;
+                    s2.y = ((s2.y+1.0)/2.0)*size_y;
+                    vert s3 = projectionMatrix*t3;
+                    s3 = s3/s3.w;
+                    s3.x = ((s3.x+1.0)/2.0)*size_x;
+                    s3.y = ((s3.y+1.0)/2.0)*size_y;
+                    drawLine(buffer, (int)s1.x, (int)s1.y, (int)s2.x, (int)s2.y);
+                    drawLine(buffer, (int)s2.x, (int)s2.y, (int)s3.x, (int)s3.y);
+                    drawLine(buffer, (int)s3.x, (int)s3.y, (int)s1.x, (int)s1.y);
+                }
+            } /*else {
+                for(int i = 0; i < face_i.size(); i++){
+                    
+                    
+                    
+                    vert transformed_vert_a = (*mesh_i).transform*(*mesh_i).verts[face_i[i]];
 
+                    //calculate normal. Only need to do this once.
+                    
 
+                    vert screen_res_a = projectionMatrix*transformed_vert_a;
+                
+                    screen_res_a.x /= screen_res_a.w;
+                    screen_res_a.y /= screen_res_a.w;
+                    screen_res_a.z /= screen_res_a.w;
+                    screen_res_a.x = ((screen_res_a.x+1.0)/2.0)*size_x;
+                    screen_res_a.y = ((screen_res_a.y+1.0)/2.0)*size_y;
+                    //DrawPixel(buffer, screen_res_a.x, screen_res_a.y);
+                    
+                    vert transformed_vert_b = (*mesh_i).transform*(*mesh_i).verts[face_i[(i+1)%face_i.size()]];
+                    //After transformation
+                    
+                    
+                    
+                    vert screen_res_b = projectionMatrix*transformed_vert_b;
 
-    
-    vert last_pixel;
-    
-    for( auto &face_i : teapot.faces){
-        for(int i = 0; i < face_i.size(); i++){
-            vert transformed_vert_a = teapot.transform*teapot.verts[face_i[i]];
-            vert screen_res_a = projectionMatrix*transformed_vert_a;
-           
-            screen_res_a.x /= screen_res_a.w;
-            screen_res_a.y /= screen_res_a.w;
-            screen_res_a.z /= screen_res_a.w;
-            screen_res_a.x = ((screen_res_a.x+1.0)/2.0)*size_x;
-            screen_res_a.y = ((screen_res_a.y+1.0)/2.0)*size_y;
-            //DrawPixel(buffer, screen_res_a.x, screen_res_a.y);
-            
-            vert transformed_vert_b = teapot.transform*teapot.verts[face_i[(i+1)%face_i.size()]];
-            vert screen_res_b = projectionMatrix*transformed_vert_b;
-
-            screen_res_b.x /= screen_res_b.w;
-            screen_res_b.y /= screen_res_b.w;
-            screen_res_b.z /= screen_res_b.w;
-            screen_res_b.x = ((screen_res_b.x+1.0)/2.0)*size_x;
-            screen_res_b.y = ((screen_res_b.y+1.0)/2.0)*size_y;
-            drawLine(buffer, (int)screen_res_a.x, (int)screen_res_a.y, (int)screen_res_b.x, (int)screen_res_b.y);
+                    screen_res_b.x /= screen_res_b.w;
+                    screen_res_b.y /= screen_res_b.w;
+                    screen_res_b.z /= screen_res_b.w;
+                    screen_res_b.x = ((screen_res_b.x+1.0)/2.0)*size_x;
+                    screen_res_b.y = ((screen_res_b.y+1.0)/2.0)*size_y;
+                    if( screen_res_b.w > 0 || screen_res_a.w > 0) {
+                        drawLine(buffer, (int)screen_res_a.x, (int)screen_res_a.y, (int)screen_res_b.x, (int)screen_res_b.y);
+                    }
+                }
+            }*/
         }
     }
-
-    //std::vector<vert> screen_verts;
-    /*for( auto &vert_i : teapot.verts){
-        vert transformed_vert = teapot.transform*vert_i;
-        vert screen_res = projectionMatrix*transformed_vert;
-        //std::cout << "X: " << screen_res.x << " Y: " << screen_res.y << std::endl;
-        
-        screen_res.x /= screen_res.w;
-        screen_res.y /= screen_res.w;
-        screen_res.z /= screen_res.w;
-
-        screen_res.x = ((screen_res.x+1.0)/2.0)*size_x;
-        screen_res.y = ((screen_res.y+1.0)/2.0)*size_y;
-        DrawPixel(buffer, screen_res.x, screen_res.y);
-        //drawLine(buffer, (int)screen_res.x, (int)screen_res.y, (int)last_pixel.x, (int)last_pixel.y);
-        //screen_verts.push_back(screen_res);
-    }*/
-
-    /*for( int i = 0 ; i < screen_verts.size(); i++ ){
-        for( int j = 0; j < screen_verts.size(); j++){
-            drawLine(buffer, (int)screen_verts[i].x, (int)screen_verts[i].y, (int)screen_verts[j].x, (int)screen_verts[j].y);
-        }
-    }*/
-
 }
 
 void Init(){
-    ReadObj("teapot.obj", teapot);
+    //ReadObj("teapot.obj", teapot);
+    //meshes.push_back(&teapot);
+    ReadObj("cube.obj", cube);
+    meshes.push_back(&cube);
 }
 
 

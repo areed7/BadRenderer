@@ -38,14 +38,21 @@ void ReadObj(const char* name, mesh& m){
 
             if(line[0] == 'f'){
                 vector<string> tokens;
-                
                 tokenizer(line, tokens, ' ');
-                
                 vector<int> face;
-                for( int i = 1; i < tokens.size(); i++){
-                    face.push_back(stoi(tokens[i])-1);
+                if(line.find('/') == std::string::npos){
+                    for( int i = 1; i < tokens.size(); i++){
+                        face.push_back(stoi(tokens[i])-1);
+                    }
+                    m.faces.push_back(face);
+                } else{
+                    for( int i = 1; i < tokens.size(); i++){
+                        vector<string> all_info_vert; //Index 0 should be face index.
+                        tokenizer(tokens[i], all_info_vert, '/');
+                        face.push_back(stoi(all_info_vert[0])-1);
+                    }
+                    m.faces.push_back(face);
                 }
-                m.faces.push_back(face);
             }
         }
         objFile.close();
