@@ -1,1 +1,1 @@
-g++ main.cpp ObjRead.cpp -o main -lgdi32
+g++ main.cpp ObjRead.cpp Rasterizer.cpp App.cpp -o main -lgdi32
