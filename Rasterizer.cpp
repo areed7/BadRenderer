@@ -211,6 +211,10 @@ void PrintTri(Triangle tri){
     std::cout << "C: " << tri.c.x << ", " << tri.c.y << ", " << tri.c.z << ", " << tri.c.w << std::endl;
 }
 
+void Rasterizer::fillTriangle(Triangle tri, int r, int g, int b){
+    
+}
+
 void Rasterizer::processMesh(Mesh& mesh) {
     //std::cout << "R: " << static_cast<void*>(screenBuffer) << std::endl;
     for( auto &face_i : mesh.faces){ //Fix this. Appears to fail passing in mesh due to access issue.

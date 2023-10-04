@@ -19,11 +19,20 @@ App::App(int screen_width, int screen_height){
 void App::update(){
     clearBuffer();
     rasterizer->update();
-    rasterizer->processMesh(meshes[0]);
+    //Process meshes
+    for( Mesh& mesh_i : meshes){
+        rasterizer->processMesh(mesh_i);
+    }
+    
+    
     //rasterizer->drawLine(0,0,200,200);
     mover += 0.001;
-    meshes[0].setLocation(2*sin(mover),2*cos(mover),-20+10*sin(mover));
-    meshes[0].setRotation(2*sin(mover), 3*cos(mover*2), mover);
+    for( int i = 0; i < meshes.size(); i++ ){
+        meshes[i].setLocation(i*sin(mover+30*i),i*cos(mover+30*i),-20+10*sin(mover));
+        meshes[i].setRotation(2*sin(mover), 3*cos(mover*2), mover);
+    }
+    
+    
 }
 
 void App::clearBuffer(){
@@ -31,10 +40,16 @@ void App::clearBuffer(){
 }
 
 void App::init(){
-    Mesh mesh;
-    mesh.setLocation(0,0,0);
-    mesh.setRotation(0,0,0);
-    ReadObj("teapot.obj", mesh);
-    meshes.push_back(mesh);
+    for( int i = 0; i < 1; i++ ){
+        Mesh mesh;
+        mesh.setLocation(0,0,0);
+        mesh.setRotation(0,0,0);
+        
+        ReadObj("teapot.obj", mesh);
+        meshes.push_back(mesh);
+    }
+    
+    
+    
     mover = 0;
 }

@@ -44,11 +44,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_PAINT:
         {
-            //auto start_time = std::chrono::high_resolution_clock::now();
+            auto start_time = std::chrono::high_resolution_clock::now();
             PushBuffer(hwnd);
-            //auto end_time = std::chrono::high_resolution_clock::now();
-            //auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-            //std::cout << duration <<"   mS" << "\r" << std::flush;
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            std::cout << duration <<"   mS" << "\r" << std::flush;
         }
         break;
         case WM_CLOSE:
