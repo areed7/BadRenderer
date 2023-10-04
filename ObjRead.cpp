@@ -24,7 +24,7 @@ void tokenizer(string input, vector<string>& parsedStr, char token){
     }
 }
 
-void ReadObj(const char* name, mesh& m){
+void ReadObj(const char* name, Mesh& m){
     ifstream objFile(name);
     string line;
     if( objFile.is_open()){
@@ -33,7 +33,7 @@ void ReadObj(const char* name, mesh& m){
             if(line[0] == 'v'){
                 vector<string> tokens;
                 tokenizer(line, tokens, ' ');
-                m.verts.push_back(vert(stod(tokens[1]), stod(tokens[2]), stod(tokens[3]), 1));
+                m.verts.push_back(Vert(stod(tokens[1]), stod(tokens[2]), stod(tokens[3]), 1));
             }
 
             if(line[0] == 'f'){

@@ -2,73 +2,55 @@
 #include <vector>
 #include <math.h>
 
-struct vert2D{
-
-    double x,y;
-    vert2D(double x=0, double y=0) : x(x), y(y) {};
-
-    vert2D operator+(const vert2D& other) const{
-        return vert2D(x+other.x, y+other.y);
-    }
-
-    vert2D operator*(double scalar) const {
-        return vert2D(x*scalar, y*scalar);
-    }
-
-    
-
-};
-
-
 //3D vertex.
-struct vert{
+struct Vert{
     
     double x, y, z, w;
 
-    vert(double x=0, double y=0, double z=0, double w=0) : x(x), y(y), z(z), w(w){}
+    Vert(double x=0, double y=0, double z=0, double w=0) : x(x), y(y), z(z), w(w){}
     
-    vert operator+(const vert& other) const{
-        return vert(x+other.x, y+other.y, z+other.z, w+other.w);
+    Vert operator+(const Vert& other) const{
+        return Vert(x+other.x, y+other.y, z+other.z, w+other.w);
     }
 
-    vert operator-(const vert& other) const{
-        return vert(x-other.x, y-other.y, z-other.z, w-other.w);
+    Vert operator-(const Vert& other) const{
+        return Vert(x-other.x, y-other.y, z-other.z, w-other.w);
     }
 
-    vert operator*(double scalar) const {
-        return vert(x*scalar, y*scalar, z*scalar, w*scalar);
+    Vert operator*(double scalar) const {
+        return Vert(x*scalar, y*scalar, z*scalar, w*scalar);
     }
 
-    vert operator/(double scalar) const {
-        return vert(x/scalar, y/scalar, z/scalar, w/scalar);
+    Vert operator/(double scalar) const {
+        return Vert(x/scalar, y/scalar, z/scalar, w/scalar);
     }
-    vert cross(const vert& other) const{
-        return vert(y*other.z-z*other.y, z*other.x-x*other.z, x*other.y-y*other.x, 0);
+    Vert cross(const Vert& other) const{
+        return Vert(y*other.z-z*other.y, z*other.x-x*other.z, x*other.y-y*other.x, 0);
     }
 
-    vert normalize() const{
+    Vert normalize() const{
         double l = sqrt(x*x + y*y + z*z + w*w);
         if(l!=0){
-            return vert(x/l, y/l, z/l, w/l);
+            return Vert(x/l, y/l, z/l, w/l);
         } else{
-            return vert(x,y,z,w);
+            return Vert(x,y,z,w);
         }
     }
 
-    double dot(const vert& other) const{
+    double dot(const Vert& other) const{
         return x*other.x + y*other.y + z*other.z +w*other.w;
     }
 };
 
-
-
-
+struct Triangle{
+    Vert a,b,c;
+};
 
 struct Matrix4x4{
     double data[4][4] = {0};
 
-    vert operator*(const vert& other) const{
-        return vert(other.x*data[0][0] + other.y*data[0][1] + other.z*data[0][2] + other.w*data[0][3] ,
+    Vert operator*(const Vert& other) const{
+        return Vert(other.x*data[0][0] + other.y*data[0][1] + other.z*data[0][2] + other.w*data[0][3] ,
                     other.x*data[1][0] + other.y*data[1][1] + other.z*data[1][2] + other.w*data[1][3] ,
                     other.x*data[2][0] + other.y*data[2][1] + other.z*data[2][2] + other.w*data[2][3] ,
                     other.x*data[3][0] + other.y*data[3][1] + other.z*data[3][2] + other.w*data[3][3]);
@@ -109,11 +91,11 @@ struct Matrix4x4{
 };
 
 
-struct mesh{
-    std::vector<vert> verts;
+struct Mesh{
+    std::vector<Vert> verts;
     std::vector<std::vector<int>> faces; //Index of verts that are connected (Draw lines for each of these)
     Matrix4x4 transform;
-    
+
     void setLocation(double x, double y, double z){
         transform.data[0][3] = x;
         transform.data[1][3] = y;
@@ -143,3 +125,4 @@ struct mesh{
         transform.data[3][3] = 1;
     }
 };
+
