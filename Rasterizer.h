@@ -28,7 +28,7 @@ public:
     void drawPixel(int x, int y);
     void drawLine(int x1, int y1, int x2, int y2);
     void update();
-    void Rasterizer::fillTriangle(Triangle tri, int r, int g, int b);
+    void fillTriangle(Triangle tri, int r, int g, int b);
     Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, int screen_height);
     void processMesh(Mesh& mesh);
 };
