@@ -33,7 +33,8 @@ void App::update(){
         meshes[i].setRotation(2*sin(mover), 3*cos(mover*2), mover);
     }
     
-    
+}
+
 bool App::isKeyDown(char key){
     return std::find(keysDown.begin(), keysDown.end(), key) != keysDown.end();
 }
