@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <algorithm>
 App::App(int screen_width, int screen_height){
     //Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, int screen_height){
     this->screen_width = screen_width;
