@@ -33,6 +33,16 @@ void App::update(){
     }
     
     
+bool App::isKeyDown(char key){
+    return std::find(keysDown.begin(), keysDown.end(), key) != keysDown.end();
+}
+
+void App::keyDown(char key){
+    keysDown.push_back(key);
+}
+
+void App::keyUp(char key){
+    keysDown.erase(std::remove(keysDown.begin(), keysDown.end(), key), keysDown.end());
 }
 
 void App::clearBuffer(){
@@ -45,7 +55,7 @@ void App::init(){
         mesh.setLocation(0,0,0);
         mesh.setRotation(0,0,0);
         
-        ReadObj("teapot.obj", mesh);
+        ReadObj("cube.obj", mesh);
         meshes.push_back(mesh);
     }
     

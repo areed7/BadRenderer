@@ -51,6 +51,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             std::cout << duration <<"   mS" << "\r" << std::flush;
         }
         break;
+
+        case WM_KEYDOWN:
+            app->keyDown(wParam);
+        break;
+
+        case WM_KEYUP:
+            app->keyUp(wParam);
+        break;
+
         case WM_CLOSE:
             free(frameBuffer);
             DestroyWindow(hwnd);
