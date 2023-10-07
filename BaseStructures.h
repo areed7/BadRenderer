@@ -21,6 +21,10 @@ struct Vert{
         return Vert(x*scalar, y*scalar, z*scalar, w*scalar);
     }
 
+    Vert operator*(float scalar) const {
+        return Vert(x*scalar, y*scalar, z*scalar, w*scalar);
+    }
+
     Vert operator/(double scalar) const {
         return Vert(x/scalar, y/scalar, z/scalar, w/scalar);
     }

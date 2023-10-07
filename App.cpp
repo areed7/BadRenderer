@@ -9,8 +9,7 @@ App::App(int screen_width, int screen_height){
     this->screen_width = screen_width;
     this->screen_height = screen_height;
     
-    cam.pos = Vert(0,0,0,0);
-    cam.target = Vert(0,0,-1,0);
+    cam.pos = Vert(0,0,-5,0);
     buffer = (char*)malloc(screen_height*screen_width*3);
     //std::cout << "A: " << static_cast<void*>(buffer) << std::endl; Debug print to verify address is the same.
     rasterizer = new Rasterizer(&cam, 80*3.14/180, buffer, screen_width, screen_height);
@@ -19,20 +18,22 @@ App::App(int screen_width, int screen_height){
 
 void App::update(){
     clearBuffer();
+    
+    //rasterizer->drawLine(0,0,200,200);
+    
+    //cam.pos = cam.pos + Vert( 0.01*isKeyDown('D') - 0.01*isKeyDown('A'),0,0.01*isKeyDown('W') - 0.01*isKeyDown('S'),0);
+    cam.pos = cam.pos + cam.forward*((0.01*isKeyDown('W')) - (0.01*isKeyDown('S'))) + cam.right*((0.01*isKeyDown('A')) - (0.01*isKeyDown('D')));
+    cam.yaw = cam.yaw - 0.001*isKeyDown('H') + 0.001*isKeyDown('J');
+    mover += 0.001;
+    //for( Mesh& mesh_i : meshes) {
+    //meshes[0].setRotation(2*sin(mover), 3*cos(mover*2), mover);
+    //}
+    
     rasterizer->update();
     //Process meshes
     for( Mesh& mesh_i : meshes){
         rasterizer->processMesh(mesh_i);
     }
-    
-    
-    //rasterizer->drawLine(0,0,200,200);
-    mover += 0.001;
-    for( int i = 0; i < meshes.size(); i++ ){
-        meshes[i].setLocation(i*sin(mover+30*i),i*cos(mover+30*i),-20+10*sin(mover));
-        meshes[i].setRotation(2*sin(mover), 3*cos(mover*2), mover);
-    }
-    
 }
 
 bool App::isKeyDown(char key){
@@ -52,16 +53,20 @@ void App::clearBuffer(){
 }
 
 void App::init(){
-    for( int i = 0; i < 1; i++ ){
-        Mesh mesh;
-        mesh.setLocation(0,0,0);
-        mesh.setRotation(0,0,0);
-        
-        ReadObj("cube.obj", mesh);
-        meshes.push_back(mesh);
-    }
+   
+    Mesh mesh;
+    mesh.setLocation(0,0,0);
+    mesh.setRotation(0,0,0);
     
+    ReadObj("teapot.obj", mesh);
     
+    Mesh plane;
+    plane.setLocation(0,-2,0);
+    plane.setRotation(0,0,0);
+    ReadObj("plane.obj", plane);
+
+    meshes.push_back(mesh);
+    meshes.push_back(plane);
     
     mover = 0;
 }

@@ -25,9 +25,18 @@ Rasterizer::Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, 
     projectionMatrix.data[3][3] = 0.0;
 
     //Needs to be processed for each frame.
-    Vert forward    = (cam->pos-cam->target).normalize();
-    Vert right      = Vert(0,1,0,0).cross(forward);
-    Vert up         = forward.cross(right);
+    double cosPitch = cos(cam->pitch);
+    double sinPitch = sin(cam->pitch);
+    double cosYaw = cos(cam->yaw);
+    double sinYaw = sin(cam->yaw);
+
+    Vert forward(sinYaw * cosPitch, sinPitch, cosYaw * cosPitch,0);
+    
+    Vert a = Vert(0,1,0,0)*(Vert(0,1,0,0).dot(forward));
+    Vert up= Vert(0,1,0,0) - a;
+    up = up.normalize();
+    
+    Vert right      = up.cross(forward);
 
     viewMatrix.data[0][0] = right.x;
     viewMatrix.data[0][1] = right.y;
@@ -52,24 +61,34 @@ Rasterizer::Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, 
 }
 
 void Rasterizer::update(){
-    Vert forward    = (cam->pos-cam->target).normalize();
-    Vert right      = Vert(0,1,0,0).cross(forward);
-    Vert up         = forward.cross(right);
 
-    viewMatrix.data[0][0] = right.x;
-    viewMatrix.data[0][1] = right.y;
-    viewMatrix.data[0][2] = right.z;
-    viewMatrix.data[0][3] = -right.dot(cam->pos);
+    double cosPitch = cos(cam->pitch);
+    double sinPitch = sin(cam->pitch);
+    double cosYaw = cos(cam->yaw);
+    double sinYaw = sin(cam->yaw);
 
-    viewMatrix.data[1][0] = up.x;
-    viewMatrix.data[1][1] = up.y;
-    viewMatrix.data[1][2] = up.z;
-    viewMatrix.data[1][3] = -up.dot(cam->pos);
+    cam->forward = Vert(sinYaw * cosPitch, sinPitch, cosYaw * cosPitch,0);
+    
+    Vert a = Vert(0,1,0,0)*(Vert(0,1,0,0).dot(cam->forward));
+    cam->up= Vert(0,1,0,0) - a;
+    cam->up = cam->up.normalize();
+    
+    cam->right      = cam->up.cross(cam->forward);
 
-    viewMatrix.data[2][0] = -forward.x;
-    viewMatrix.data[2][1] = -forward.y;
-    viewMatrix.data[2][2] = -forward.z;
-    viewMatrix.data[2][3] = -forward.dot(cam->pos);
+    viewMatrix.data[0][0] = cam->right.x;
+    viewMatrix.data[0][1] = cam->right.y;
+    viewMatrix.data[0][2] = cam->right.z;
+    viewMatrix.data[0][3] = -cam->right.dot(cam->pos);
+
+    viewMatrix.data[1][0] = cam->up.x;
+    viewMatrix.data[1][1] = cam->up.y;
+    viewMatrix.data[1][2] = cam->up.z;
+    viewMatrix.data[1][3] = -cam->up.dot(cam->pos);
+
+    viewMatrix.data[2][0] = -cam->forward.x;
+    viewMatrix.data[2][1] = -cam->forward.y;
+    viewMatrix.data[2][2] = -cam->forward.z;
+    viewMatrix.data[2][3] = -cam->forward.dot(cam->pos);
 
     viewMatrix.data[3][0] = 0;
     viewMatrix.data[3][1] = 0;
@@ -133,6 +152,7 @@ Triangle Rasterizer::processTriangle(Triangle& vertex, Matrix4x4& mesh_transform
     t1 = mesh_transform*vertex.a;
     t2 = mesh_transform*vertex.b;
     t3 = mesh_transform*vertex.c;
+
     Vert v1, v2, v3;
     v1 = viewMatrix*t1;
     v2 = viewMatrix*t2;
@@ -141,12 +161,11 @@ Triangle Rasterizer::processTriangle(Triangle& vertex, Matrix4x4& mesh_transform
     Vert norm, l1, l2;
     l1 = v2-v1;
     l2 = v3-v1;
-    norm.x = l1.y*l2.z - l1.z*l2.y;
-    norm.y = l1.z*l2.x - l1.x*l2.z;
-    norm.z = l1.x*l2.y - l1.y*l2.x;
-    double l = sqrt(norm.x*norm.x + norm.y*norm.y + norm.z*norm.z);
-    norm = norm/l;
-    double dot = norm.x * (v1.x-cam->pos.x) + norm.y*(v1.y-cam->pos.y) + norm.z*(v1.z-cam->pos.z);
+    norm = l1.cross(l2);
+    norm = norm.normalize();
+
+    double dot = norm.dot(cam->forward);
+
     if(dot > 0.0)
     {
         Vert s1 = projectionMatrix*v1;

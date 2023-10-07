@@ -4,15 +4,16 @@
 //TODO: Implement more efficent drawing algorithms.
 struct Camera{
     Vert pos;
-    Vert target;
+    float pitch, yaw, roll;
+    Vert forward, right, up;
 };
 
 class Rasterizer {
 private:
     Matrix4x4 viewMatrix;
     Matrix4x4 projectionMatrix;
-    const double zfar = 100000;
-    const double znear = 0.1;
+    const double zfar = 1024;
+    const double znear = 1.1;
     double fov;
     int screen_width, screen_height;
     //Location of the camera and screen buffer in memory.
