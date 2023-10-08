@@ -22,14 +22,8 @@ BITMAPINFO bmpInfo;
 
 //Push the data to the screen.
 void PushBuffer(HWND hwnd){
-    
-    BITMAPINFO bmpInfo;
-    bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
-    bmpInfo.bmiHeader.biWidth = screen_width;
-    bmpInfo.bmiHeader.biHeight = screen_height;
-    bmpInfo.bmiHeader.biPlanes = 1;
-    bmpInfo.bmiHeader.biBitCount = 24;  // 8-bit per pixel (As in. 8 bits for R, 8 Bits for G and 8 bits for B. For a total of 24)
-    bmpInfo.bmiHeader.biCompression = BI_RGB;
+
+   
     PAINTSTRUCT ps;
     HDC hdc = GetDC(hwnd);
     app->update();
@@ -48,10 +42,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             PushBuffer(hwnd);
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-            std::cout << duration <<"   mS" << "\r" << std::flush;
+            //std::cout << duration <<"   mS" << "\r" << std::flush;
         }
         break;
-
+        case WM_MOUSEMOVE:
+            app->mouseSetPos(LOWORD(lParam), HIWORD(lParam));
+        break;
         case WM_KEYDOWN:
             app->keyDown(wParam);
         break;
@@ -96,6 +92,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     
     wc.lpszClassName = g_szClassName;
     wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
+
+    bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
+    bmpInfo.bmiHeader.biWidth = screen_width;
+    bmpInfo.bmiHeader.biHeight = screen_height;
+    bmpInfo.bmiHeader.biPlanes = 1;
+    bmpInfo.bmiHeader.biBitCount = 24;  // 8-bit per pixel (As in. 8 bits for R, 8 Bits for G and 8 bits for B. For a total of 24)
+    bmpInfo.bmiHeader.biCompression = BI_RGB;
 
     if(!RegisterClassExW(&wc))
     {

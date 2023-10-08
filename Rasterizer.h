@@ -13,13 +13,13 @@ private:
     Matrix4x4 viewMatrix;
     Matrix4x4 projectionMatrix;
     const double zfar = 1024;
-    const double znear = 1.1;
+    const double znear = 0.01;
     double fov;
     int screen_width, screen_height;
     //Location of the camera and screen buffer in memory.
     Camera* cam;
     char* screenBuffer;
-    
+    void updateViewMatrix();
     Triangle processTriangle(Triangle& vertex, Matrix4x4& mesh_transform);
     
     

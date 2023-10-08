@@ -18,31 +18,35 @@ struct Vert{
     }
 
     Vert operator*(double scalar) const {
-        return Vert(x*scalar, y*scalar, z*scalar, w*scalar);
+        return Vert(x*scalar, y*scalar, z*scalar, w);
+    }
+
+    Vert operator*(int scalar) const {
+        return Vert(x*scalar, y*scalar, z*scalar, w);
     }
 
     Vert operator*(float scalar) const {
-        return Vert(x*scalar, y*scalar, z*scalar, w*scalar);
+        return Vert(x*scalar, y*scalar, z*scalar, w);
     }
 
     Vert operator/(double scalar) const {
-        return Vert(x/scalar, y/scalar, z/scalar, w/scalar);
+        return Vert(x/scalar, y/scalar, z/scalar, w);
     }
     Vert cross(const Vert& other) const{
         return Vert(y*other.z-z*other.y, z*other.x-x*other.z, x*other.y-y*other.x, 0);
     }
 
     Vert normalize() const{
-        double l = sqrt(x*x + y*y + z*z + w*w);
+        double l = sqrt(x*x + y*y + z*z);
         if(l!=0){
-            return Vert(x/l, y/l, z/l, w/l);
+            return Vert(x/l, y/l, z/l, w);
         } else{
             return Vert(x,y,z,w);
         }
     }
 
     double dot(const Vert& other) const{
-        return x*other.x + y*other.y + z*other.z +w*other.w;
+        return x*other.x + y*other.y + z*other.z;
     }
 };
 
