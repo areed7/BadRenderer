@@ -28,7 +28,7 @@ void App::init(){
     ReadObj("teapot.obj", mesh);
     
     Mesh plane;
-    plane.setLocation(0,-15,0);
+    plane.setLocation(0,-4,0);
     plane.setRotation(0,0,0);
     ReadObj("plane.obj", plane);
 
@@ -56,10 +56,10 @@ void App::update(){
     
     cam.yaw = cam.yaw + 0.01*mdx;
     cam.pitch = cam.pitch + 0.01*mdy;
-    std::cout << "Pitch: " << cam.pitch * 180/M_PI << " Yaw: " << cam.yaw* 180/M_PI << std::endl;
+    //std::cout << "Pitch: " << cam.pitch * 180/M_PI << " Yaw: " << cam.yaw* 180/M_PI << std::endl;
     mover += 0.001;
     //for( Mesh& mesh_i : meshes) {
-    //meshes[0].setRotation(2*sin(mover), 3*cos(mover*2), mover);
+    meshes[0].setRotation(2*sin(mover), 3*cos(mover*2), mover);
     //}
     
     rasterizer->update();

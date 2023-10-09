@@ -58,10 +58,14 @@ struct Vert{
     double dot(const Vert& other) const{
         return x*other.x + y*other.y + z*other.z;
     }
+
+    double length() const{
+        return sqrt(x*x+y*y+z*z);
+    }
 };
 
 struct Triangle{
-    Vert a,b,c;
+    Vert a,b,c, norm;
 };
 
 struct Matrix4x4{

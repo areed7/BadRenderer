@@ -77,9 +77,9 @@ void Rasterizer::drawPixel(int x, int y, int r, int g, int b){
     if( x >= screen_width || y >= screen_height || x < 0 || y < 0){
         return;
     }
-    *(screenBuffer + (y*screen_width + x)*3 + 0) = 255;
-    *(screenBuffer + (y*screen_width + x)*3 + 1) = 255;
-    *(screenBuffer + (y*screen_width + x)*3 + 2) = 255;
+    *(screenBuffer + (y*screen_width + x)*3 + 0) = r;
+    *(screenBuffer + (y*screen_width + x)*3 + 1) = g;
+    *(screenBuffer + (y*screen_width + x)*3 + 2) = b;
 }
 
 //Bresenham's line algorithm
@@ -140,9 +140,9 @@ Triangle Rasterizer::processTriangle(Triangle& vertex, Matrix4x4& mesh_transform
     norm = l1.cross(l2);
     norm = norm.normalize();
     
-    //Vert cullBehind = cam->pos-t1;
-    
-    if(norm.z < 0.0)
+    double dot = norm.dot(v1);
+
+    if(dot < 0.0)
     {
         Vert s1 = projectionMatrix*v1;
         s1 = s1/s1.w;
@@ -160,6 +160,7 @@ Triangle Rasterizer::processTriangle(Triangle& vertex, Matrix4x4& mesh_transform
         screenTriangle.a = s1;
         screenTriangle.b = s2;
         screenTriangle.c = s3;
+        screenTriangle.norm = norm;
         return screenTriangle;
     }
     /*else { Bad old code that processes other types of faces. Ignore for now. 
@@ -247,7 +248,14 @@ void Rasterizer::processMesh(Mesh& mesh) {
             Triangle tri;
             tri = processTriangle(triangle, mesh.transform);
 
-            fillTriangle(tri,255,255,255);
+            Vert lightDir(0,0,-1);
+            double l = sqrt(lightDir.x*lightDir.x+lightDir.y*lightDir.y+lightDir.z*lightDir.z);
+            lightDir.x /= l;
+            lightDir.y /= l;
+            lightDir.z /= l;
+
+            double dp = tri.norm.x*lightDir.x + tri.norm.y*lightDir.y + tri.norm.z*lightDir.z;
+            fillTriangle(tri,255*dp,255*dp,255*dp);
             
             /*if( !( isnan(tri.a.w)  || isnan(tri.b.w)  || isnan(tri.c.w)) ){
                 drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.b.x, (int)tri.b.y);
