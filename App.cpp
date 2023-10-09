@@ -14,6 +14,7 @@ App::App(int screen_width, int screen_height){
     
     cam.pos = Vert(0,0,0,0);
     buffer = (char*)malloc(screen_height*screen_width*3);
+    
     //std::cout << "A: " << static_cast<void*>(buffer) << std::endl; Debug print to verify address is the same.
     rasterizer = new Rasterizer(&cam, 70, buffer, screen_width, screen_height);
     init();

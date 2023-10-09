@@ -42,7 +42,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             PushBuffer(hwnd);
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-            //std::cout << duration <<"   mS" << "\r" << std::flush;
+            std::cout << duration <<"   mS" << "\r" << std::flush;
         }
         break;
         case WM_MOUSEMOVE:

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cmath>
 #include <iostream>
+#include <cstring>
 
 /* 
  * fov : FOV in degrees
@@ -15,6 +16,10 @@ Rasterizer::Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, 
     this->screen_height = screen_height;
     this->cam = cam;
     this->screenBuffer = buffer;
+    depthBuffer = (float* ) malloc(screen_width*screen_height*sizeof(float));
+    for( int i = 0; i < screen_width*screen_height; i++){
+        *(depthBuffer + i) = (float)zfar;
+    }
     float fovRad = 1.0f / tanf(fov * 0.5f / 180.0f * 3.14159f);
     //Only needs to be processed once.
     projectionMatrix.data[0][0] = (screen_width/screen_height)*fovRad;
@@ -69,6 +74,10 @@ void Rasterizer::updateViewMatrix(){
 }
 
 void Rasterizer::update(){
+    //Clear buffer;
+    for( int i = 0; i < screen_width*screen_height; i++){
+        *(depthBuffer + i) = (float)zfar;
+    }
     updateViewMatrix();
 }
 
@@ -228,8 +237,15 @@ void Rasterizer::fillTriangle(Triangle tri, int r, int g, int b){
             float t = (float)vs1.cross(q) / vs1.cross(vs2);
 
             if ( (s >= 0) && (t >= 0) && (s + t <= 1))
-            { 
-            drawPixel(x, y, r, g, b);
+            {
+                if( x >= 0 && x < screen_width && y >= 0 && y < screen_width){
+                    if(tri.a.w < *(depthBuffer + (y*screen_width + x))){
+                        drawPixel(x, y, r, g, b);
+                        *(depthBuffer + (y*screen_width + x)) = tri.a.w;
+                    }
+                }
+                
+
             }
         }
     }

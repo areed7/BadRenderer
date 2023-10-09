@@ -19,6 +19,7 @@ private:
     //Location of the camera and screen buffer in memory.
     Camera* cam;
     char* screenBuffer;
+    float*  depthBuffer;
     void updateViewMatrix();
     Triangle processTriangle(Triangle& vertex, Matrix4x4& mesh_transform);
     
