@@ -2,6 +2,16 @@
 #include <vector>
 #include <math.h>
 
+struct Vert2D{
+    float x,y;
+    
+    Vert2D(float x=0, float y=0) : x(x), y(y){}
+
+    float cross(const Vert2D& other){
+        return x*other.y - y*other.x;
+    }
+};
+
 //3D vertex.
 struct Vert{
     
@@ -134,3 +144,7 @@ struct Mesh{
     }
 };
 
+struct plane{
+    Vert norm;
+    float d;
+};

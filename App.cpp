@@ -4,6 +4,9 @@
 #include <cstring>
 #include <iostream>
 #include <algorithm>
+#include <math.h>
+#define _USE_MATH_DEFINES
+
 App::App(int screen_width, int screen_height){
     //Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, int screen_height){
     this->screen_width = screen_width;
@@ -50,10 +53,10 @@ void App::update(){
     //cam.pos = cam.pos + Vert( 0.01*isKeyDown('D') - 0.01*isKeyDown('A'),0,0.01*isKeyDown('W') - 0.01*isKeyDown('S'),0);
     cam.pos = cam.pos + (cam.forward*((0.01*isKeyDown('W')) - (0.01*isKeyDown('S')))) + (cam.right*(-(0.01*isKeyDown('A')) + (0.01*isKeyDown('D')))) + (cam.up*((0.01*isKeyDown(' ')) - (0.01*isKeyDown('C'))));
     //cam.yaw = cam.yaw - 0.001*isKeyDown('H') + 0.001*isKeyDown('J');
-
+    
     cam.yaw = cam.yaw + 0.01*mdx;
     cam.pitch = cam.pitch + 0.01*mdy;
-    std::cout << "Pitch: " << cam.pitch << " Yaw: " << cam.yaw << std::endl;
+    std::cout << "Pitch: " << cam.pitch * 180/M_PI << " Yaw: " << cam.yaw* 180/M_PI << std::endl;
     mover += 0.001;
     //for( Mesh& mesh_i : meshes) {
     //meshes[0].setRotation(2*sin(mover), 3*cos(mover*2), mover);

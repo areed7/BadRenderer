@@ -26,7 +26,7 @@ private:
 
     
 public:
-    void drawPixel(int x, int y);
+    void drawPixel(int x, int y, int r = 255, int g = 255, int b = 255);
     void drawLine(int x1, int y1, int x2, int y2);
     void update();
     void fillTriangle(Triangle tri, int r, int g, int b);

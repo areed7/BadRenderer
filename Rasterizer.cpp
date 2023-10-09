@@ -4,7 +4,7 @@
 #include <iostream>
 
 /* 
- * fov : FOV in radians
+ * fov : FOV in degrees
  * screen_width : Width rendering area/screen (Char buffer)
  * screen_height : Height of the rendering area/screen (Char buffer)
  * 
@@ -72,7 +72,7 @@ void Rasterizer::update(){
     updateViewMatrix();
 }
 
-void Rasterizer::drawPixel(int x, int y){
+void Rasterizer::drawPixel(int x, int y, int r, int g, int b){
 
     if( x >= screen_width || y >= screen_height || x < 0 || y < 0){
         return;
@@ -206,8 +206,32 @@ void PrintTri(Triangle tri){
     std::cout << "C: " << tri.c.x << ", " << tri.c.y << ", " << tri.c.z << ", " << tri.c.w << std::endl;
 }
 
+
+//Barycentric Algorithm
 void Rasterizer::fillTriangle(Triangle tri, int r, int g, int b){
-    
+    int maxX = std::max(tri.a.x, std::max(tri.b.x, tri.c.x));
+    int minX = std::min(tri.a.x, std::min(tri.b.x, tri.c.x));
+    int maxY = std::max(tri.a.y, std::max(tri.b.y, tri.c.y));
+    int minY = std::min(tri.a.y, std::min(tri.b.y, tri.c.y));
+
+    Vert2D vs1(tri.b.x - tri.a.x, tri.b.y - tri.a.y);
+    Vert2D vs2(tri.c.x - tri.a.x, tri.c.y - tri.a.y);
+
+    for (int x = minX; x <= maxX; x++)
+    {
+        for (int y = minY; y <= maxY; y++)
+        {
+            Vert2D q(x - tri.a.x, y - tri.a.y);
+
+            float s = (float)q.cross(vs2) / vs1.cross(vs2);
+            float t = (float)vs1.cross(q) / vs1.cross(vs2);
+
+            if ( (s >= 0) && (t >= 0) && (s + t <= 1))
+            { 
+            drawPixel(x, y, r, g, b);
+            }
+        }
+    }
 }
 
 void Rasterizer::processMesh(Mesh& mesh) {
@@ -223,12 +247,13 @@ void Rasterizer::processMesh(Mesh& mesh) {
             Triangle tri;
             tri = processTriangle(triangle, mesh.transform);
 
+            fillTriangle(tri,255,255,255);
             
-            if( !( isnan(tri.a.w)  || isnan(tri.b.w)  || isnan(tri.c.w)) ){
+            /*if( !( isnan(tri.a.w)  || isnan(tri.b.w)  || isnan(tri.c.w)) ){
                 drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.b.x, (int)tri.b.y);
                 drawLine((int)tri.b.x, (int)tri.b.y, (int)tri.c.x, (int)tri.c.y);
                 drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.c.x, (int)tri.c.y);
-            }
+            }*/
         }
     }
 }
