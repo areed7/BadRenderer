@@ -34,7 +34,7 @@ void Rasterizer::updateViewMatrix(){
     double cosYaw = cos(cam->yaw);
     double sinYaw = sin(cam->yaw);
 
-    cam->forward = Vert(cosYaw,0,-sinYaw,0);
+    cam->forward = Vert(cosPitch * sinYaw, -sinPitch,cosPitch*cosYaw,0);
     //cam->forward = Vert(cosPitch,-sinPitch,0,0);
     cam->forward = cam->forward.normalize();
     
@@ -43,7 +43,10 @@ void Rasterizer::updateViewMatrix(){
     cam->up = cam->up.normalize();
     
     cam->right      = cam->up.cross(cam->forward);
-    cam->right = cam->right.normalize();
+    cam->right      = cam->right.normalize();
+
+    cam->up = cam->forward.cross(cam->right);
+    cam->up = cam->up.normalize();
     viewMatrix.data[0][0] = cam->right.x;
     viewMatrix.data[0][1] = cam->right.y;
     viewMatrix.data[0][2] = cam->right.z;

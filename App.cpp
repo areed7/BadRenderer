@@ -19,7 +19,7 @@ App::App(int screen_width, int screen_height){
 void App::init(){
    
     Mesh mesh;
-    mesh.setLocation(10,0,0);
+    mesh.setLocation(0,0,10);
     mesh.setRotation(0,0,0);
     
     ReadObj("teapot.obj", mesh);
@@ -30,7 +30,7 @@ void App::init(){
     ReadObj("plane.obj", plane);
 
     meshes.push_back(mesh);
-    meshes.push_back(plane);
+    //meshes.push_back(plane);
     
     mover = 0;
 
@@ -48,7 +48,7 @@ void App::update(){
     //rasterizer->drawLine(0,0,200,200);
     
     //cam.pos = cam.pos + Vert( 0.01*isKeyDown('D') - 0.01*isKeyDown('A'),0,0.01*isKeyDown('W') - 0.01*isKeyDown('S'),0);
-    cam.pos = cam.pos + (cam.forward*((0.01*isKeyDown('W')) - (0.01*isKeyDown('S')))) + (cam.right*(-(0.01*isKeyDown('A')) + (0.01*isKeyDown('D')))) + (cam.up*((0.01*isKeyDown(' ')) - (0.01*isKeyDown('Z'))));
+    cam.pos = cam.pos + (cam.forward*((0.01*isKeyDown('W')) - (0.01*isKeyDown('S')))) + (cam.right*(-(0.01*isKeyDown('A')) + (0.01*isKeyDown('D')))) + (cam.up*((0.01*isKeyDown(' ')) - (0.01*isKeyDown('C'))));
     //cam.yaw = cam.yaw - 0.001*isKeyDown('H') + 0.001*isKeyDown('J');
 
     cam.yaw = cam.yaw + 0.01*mdx;
