@@ -1,8 +1,9 @@
 #include "Rasterizer.h"
-#include <math.h>
 #include <cmath>
 #include <iostream>
 #include <cstring>
+#include <math.h>
+#define _USE_MATH_DEFINES
 
 /* 
  * fov : FOV in degrees
@@ -30,9 +31,72 @@ Rasterizer::Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, 
     projectionMatrix.data[3][3] = 0.0;
 
     updateViewMatrix();
-
+    updateFrustrum();
 }
 
+bool Rasterizer::isPointInsidePlane(const Vert& point, Plane& frustPlane) {
+    
+    if (frustPlane.norm.dot(point) + frustPlane.d > 0) {
+        return false;  // Point is behind one of the planes
+    }
+    return true;  // Point is in front of all the planes
+}
+
+bool Rasterizer::isTriInsidePlane(Triangle& tri, Plane& frustPlane){
+    bool p1InP = isPointInsidePlane(tri.a, frustPlane);
+    bool p1Inp2 = isPointInsidePlane(tri.b, frustPlane);
+    bool p1Inp3 = isPointInsidePlane(tri.c, frustPlane);
+    
+    if(p1InP || p1Inp2 || p1Inp3){
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool Rasterizer::isTriInsideFrust(Triangle& tri){
+    return isTriInsidePlane(tri, frust.rightPlane) &&
+        isTriInsidePlane(tri, frust.leftPlane) &&
+        isTriInsidePlane(tri, frust.upPlane) &&
+        isTriInsidePlane(tri, frust.downPlane) &&
+        isTriInsidePlane(tri, frust.farPlane) &&
+        isTriInsidePlane(tri, frust.nearPlane);
+        
+}
+
+void Rasterizer::updateFrustrum(){
+    
+    double fovRad = fov * M_PI / 180;
+    double cosPitch  = cos(cam->pitch);
+    double sinPitch  = sin(cam->pitch);
+    double cosPitchP = cos(cam->pitch + fovRad/2);
+    double sinPitchP = sin(cam->pitch + fovRad/2);
+    double cosPitchN = cos(cam->pitch - fovRad/2);
+    double sinPitchN = sin(cam->pitch - fovRad/2);
+    double cosYaw = cos(cam->yaw);
+    double sinYaw = sin(cam->yaw);
+    double cosYawP = cos(cam->yaw + fovRad/2);
+    double cosYawN = cos(cam->yaw - fovRad/2);
+    double sinYawP = sin(cam->yaw + fovRad/2);
+    double sinYawN = sin(cam->yaw - fovRad/2);
+
+    frust.rightPlane.norm = cam->up.cross(Vert(cosPitch * sinYawP, -sinPitch, cosPitch * cosYawP, 0)).normalize();
+    frust.rightPlane.d = -cam->pos.dot(frust.rightPlane.norm);
+
+    frust.leftPlane.norm = Vert(cosPitch * sinYawN, -sinPitch, cosPitch * cosYawN, 0).cross(cam->up).normalize();
+    frust.leftPlane.d = -cam->pos.dot(frust.leftPlane.norm);
+    
+    frust.upPlane.norm = (Vert(cosPitchN * sinYaw, -sinPitchN, cosPitchN * cosYaw, 0).cross(cam->right)).normalize();
+    frust.upPlane.d = -cam->pos.dot(frust.upPlane.norm);
+
+    frust.downPlane.norm = (cam->right.cross(Vert(cosPitchP * sinYaw, -sinPitchP, cosPitchP * cosYaw, 0))).normalize();
+    frust.downPlane.d = -cam->pos.dot(frust.downPlane.norm);
+
+    frust.nearPlane.norm = cam->forward*-1;
+    frust.nearPlane.d    = -frust.nearPlane.norm.dot(cam->pos) - znear*frust.nearPlane.norm.length();
+    frust.farPlane.norm  = cam->forward;
+    frust.farPlane.d     = -frust.farPlane.norm.dot(cam->pos) - zfar*frust.farPlane.norm.length();
+}
 void Rasterizer::updateViewMatrix(){
     double cosPitch = cos(cam->pitch);
     double sinPitch = sin(cam->pitch);
@@ -79,6 +143,7 @@ void Rasterizer::update(){
         *(depthBuffer + i) = (float)zfar;
     }
     updateViewMatrix();
+    updateFrustrum();
 }
 
 void Rasterizer::drawPixel(int x, int y, int r, int g, int b){
@@ -93,12 +158,13 @@ void Rasterizer::drawPixel(int x, int y, int r, int g, int b){
 
 //Bresenham's line algorithm
 void Rasterizer::drawLine(int x1, int y1, int x2, int y2) {
+    //std::cout << "DrawLine" << std::endl;
     // Check if the line is vertical
     if (x2 == x1) {
         int yStart = std::min(y1, y2);
         int yEnd = std::max(y1, y2);
-        for (int y = yStart; y <= yEnd; ++y) {
-            drawPixel(x1, y);
+        for (int y = std::max(yStart,0); y <= std::min(yEnd, screen_width-1); ++y) {
+            drawPixel(x1, y, 255, 0, 0);
         }
         return;
     }
@@ -114,7 +180,7 @@ void Rasterizer::drawLine(int x1, int y1, int x2, int y2) {
         }
         for (int x = std::max(x1,0); x <= std::min(x2,screen_width-1); ++x) {
             int y = static_cast<int>(y1 + slope * (x - x1));
-            drawPixel(x, y);
+            drawPixel(x, y, 255, 0, 0);
         }
     } else {
         // Handle steep slopes (loop over y values)
@@ -124,9 +190,10 @@ void Rasterizer::drawLine(int x1, int y1, int x2, int y2) {
         }
         for (int y = std::max(0, y1); y <= std::min(y2, screen_height-1); ++y) {
             int x = static_cast<int>(x1 + (y - y1) / slope);
-            drawPixel(x, y);
+            drawPixel(x, y, 255, 0, 0);
         }
     }
+    //std::cout << "End DrawLine" << std::endl;
 }
 
 /*
@@ -137,115 +204,75 @@ Triangle Rasterizer::processTriangle(Triangle& vertex, Matrix4x4& mesh_transform
     t1 = mesh_transform*vertex.a;
     t2 = mesh_transform*vertex.b;
     t3 = mesh_transform*vertex.c;
+    Triangle triTest;
+    triTest.a = t1;
+    triTest.b = t2;
+    triTest.c = t3;
+    triTest.norm = Vert(0,0,0,0);
+    if(isTriInsideFrust(triTest)){
+        Vert v1, v2, v3;
+        v1 = viewMatrix*t1;
+        v2 = viewMatrix*t2;
+        v3 = viewMatrix*t3;
 
-    Vert v1, v2, v3;
-    v1 = viewMatrix*t1;
-    v2 = viewMatrix*t2;
-    v3 = viewMatrix*t3;
-
-    Vert norm, l1, l2;
-    l1 = v2-v1;
-    l2 = v3-v1;
-    norm = l1.cross(l2);
-    norm = norm.normalize();
-    
-    double dot = norm.dot(v1);
-
-    if(dot < 0.0)
-    {
-        Vert s1 = projectionMatrix*v1;
-        s1 = s1/s1.w;
-        s1.x = ((s1.x+1.0)/2.0)*screen_width;
-        s1.y = ((s1.y+1.0)/2.0)*screen_height;
-        Vert s2 = projectionMatrix*v2;
-        s2 = s2/s2.w;
-        s2.x = ((s2.x+1.0)/2.0)*screen_width;
-        s2.y = ((s2.y+1.0)/2.0)*screen_height;
-        Vert s3 = projectionMatrix*v3;
-        s3 = s3/s3.w;
-        s3.x = ((s3.x+1.0)/2.0)*screen_width;
-        s3.y = ((s3.y+1.0)/2.0)*screen_height;
-        Triangle screenTriangle;
-        screenTriangle.a = s1;
-        screenTriangle.b = s2;
-        screenTriangle.c = s3;
-        screenTriangle.norm = norm;
-        return screenTriangle;
-    }
-    /*else { Bad old code that processes other types of faces. Ignore for now. 
-    for(int i = 0; i < face_i.size(); i++){
+        Vert norm, l1, l2;
+        l1 = v2-v1;
+        l2 = v3-v1;
+        norm = l1.cross(l2);
+        norm = norm.normalize();
         
-        
-        
-        Vert transformed_vert_a = (*mesh_i).transform*(*mesh_i).verts[face_i[i]];
-
-        //calculate normal. Only need to do this once.
-        
-
-        Vert screen_res_a = projectionMatrix*transformed_vert_a;
-    
-        screen_res_a.x /= screen_res_a.w;
-        screen_res_a.y /= screen_res_a.w;
-        screen_res_a.z /= screen_res_a.w;
-        screen_res_a.x = ((screen_res_a.x+1.0)/2.0)*size_x;
-        screen_res_a.y = ((screen_res_a.y+1.0)/2.0)*size_y;
-        //DrawPixel(buffer, screen_res_a.x, screen_res_a.y);
-        
-        Vert transformed_vert_b = (*mesh_i).transform*(*mesh_i).verts[face_i[(i+1)%face_i.size()]];
-        //After transformation
-        
-        
-        
-        Vert screen_res_b = projectionMatrix*transformed_vert_b;
-
-        screen_res_b.x /= screen_res_b.w;
-        screen_res_b.y /= screen_res_b.w;
-        screen_res_b.z /= screen_res_b.w;
-        screen_res_b.x = ((screen_res_b.x+1.0)/2.0)*size_x;
-        screen_res_b.y = ((screen_res_b.y+1.0)/2.0)*size_y;
-        if( screen_res_b.w > 0 || screen_res_a.w > 0) {
-            drawLine(buffer, (int)screen_res_a.x, (int)screen_res_a.y, (int)screen_res_b.x, (int)screen_res_b.y);
+        double dot = norm.dot(v1);
+        if(dot < 0.0)
+        {
+            Vert s1 = projectionMatrix*v1;
+            s1 = s1/s1.w;
+            s1.x = ((s1.x+1.0)/2.0)*screen_width;
+            s1.y = ((s1.y+1.0)/2.0)*screen_height;
+            Vert s2 = projectionMatrix*v2;
+            s2 = s2/s2.w;
+            s2.x = ((s2.x+1.0)/2.0)*screen_width;
+            s2.y = ((s2.y+1.0)/2.0)*screen_height;
+            Vert s3 = projectionMatrix*v3;
+            s3 = s3/s3.w;
+            s3.x = ((s3.x+1.0)/2.0)*screen_width;
+            s3.y = ((s3.y+1.0)/2.0)*screen_height;
+            Triangle screenTriangle;
+            screenTriangle.a = s1;
+            screenTriangle.b = s2;
+            screenTriangle.c = s3;
+            screenTriangle.norm = norm;
+            return screenTriangle;
         }
     }
-}*/
-}
-
-void PrintTri(Triangle tri){
-    std::cout << "A: " << tri.a.x << ", " << tri.a.y << ", " << tri.a.z << ", " << tri.a.w << std::endl;
-    std::cout << "B: " << tri.b.x << ", " << tri.b.y << ", " << tri.b.z << ", " << tri.b.w << std::endl;
-    std::cout << "C: " << tri.c.x << ", " << tri.c.y << ", " << tri.c.z << ", " << tri.c.w << std::endl;
 }
 
 
 //Barycentric Algorithm
-void Rasterizer::fillTriangle(Triangle tri, int r, int g, int b){
-    int maxX = std::max(tri.a.x, std::max(tri.b.x, tri.c.x));
-    int minX = std::min(tri.a.x, std::min(tri.b.x, tri.c.x));
-    int maxY = std::max(tri.a.y, std::max(tri.b.y, tri.c.y));
-    int minY = std::min(tri.a.y, std::min(tri.b.y, tri.c.y));
+void Rasterizer::fillTriangle(Triangle tri, int r, int g, int b) {
+    int maxX = std::min((double)(screen_width - 1), std::max(tri.a.x, std::max(tri.b.x, tri.c.x)));
+    int minX = std::max(0.0, std::min(tri.a.x, std::min(tri.b.x, tri.c.x)));
+    int maxY = std::min((double)(screen_height - 1), std::max(tri.a.y, std::max(tri.b.y, tri.c.y)));
+    int minY = std::max(0.0, std::min(tri.a.y, std::min(tri.b.y, tri.c.y)));
 
     Vert2D vs1(tri.b.x - tri.a.x, tri.b.y - tri.a.y);
     Vert2D vs2(tri.c.x - tri.a.x, tri.c.y - tri.a.y);
+    float crossVs = vs1.cross(vs2);
 
-    for (int x = minX; x <= maxX; x++)
-    {
-        for (int y = minY; y <= maxY; y++)
-        {
-            Vert2D q(x - tri.a.x, y - tri.a.y);
+    for (int x = std::max(minX,0); x <= std::min(maxX,screen_width-1); x++) {
+        for (int y = std::max(minY,0); y <= std::min(maxY,screen_height-1); y++) {
+            int idx = y * screen_width + x;
+            if (tri.a.w < depthBuffer[idx]) {
+                Vert2D q(x - tri.a.x, y - tri.a.y);
 
-            float s = (float)q.cross(vs2) / vs1.cross(vs2);
-            float t = (float)vs1.cross(q) / vs1.cross(vs2);
+                float s = q.cross(vs2) / crossVs;
+                float t = vs1.cross(q) / crossVs;
 
-            if ( (s >= 0) && (t >= 0) && (s + t <= 1))
-            {
-                if( x >= 0 && x < screen_width && y >= 0 && y < screen_width){
-                    if(tri.a.w < *(depthBuffer + (y*screen_width + x))){
+                if ((s >= 0) && (t >= 0) && (s + t <= 1)) {
+                    {
                         drawPixel(x, y, r, g, b);
-                        *(depthBuffer + (y*screen_width + x)) = tri.a.w;
+                        depthBuffer[idx] = tri.a.w;
                     }
                 }
-                
-
             }
         }
     }
@@ -262,8 +289,9 @@ void Rasterizer::processMesh(Mesh& mesh) {
             triangle.b = mesh.verts[face_i[1]];
             triangle.c = mesh.verts[face_i[2]];
             Triangle tri;
+            //std::cout << "Process Triangle" << std::endl;
             tri = processTriangle(triangle, mesh.transform);
-
+            //std::cout << "End Process Triangle" << std::endl;
             Vert lightDir(0,0,-1);
             double l = sqrt(lightDir.x*lightDir.x+lightDir.y*lightDir.y+lightDir.z*lightDir.z);
             lightDir.x /= l;
@@ -271,13 +299,14 @@ void Rasterizer::processMesh(Mesh& mesh) {
             lightDir.z /= l;
 
             double dp = tri.norm.x*lightDir.x + tri.norm.y*lightDir.y + tri.norm.z*lightDir.z;
-            fillTriangle(tri,255*dp,255*dp,255*dp);
-            
-            /*if( !( isnan(tri.a.w)  || isnan(tri.b.w)  || isnan(tri.c.w)) ){
-                drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.b.x, (int)tri.b.y);
-                drawLine((int)tri.b.x, (int)tri.b.y, (int)tri.c.x, (int)tri.c.y);
-                drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.c.x, (int)tri.c.y);
-            }*/
+            //fillTriangle(tri,255*dp,255*dp,255*dp);
+            if( mesh.drawWireframe ){
+                if( !( isnan(tri.a.w)  || isnan(tri.b.w)  || isnan(tri.c.w)) ){
+                    drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.b.x, (int)tri.b.y);
+                    drawLine((int)tri.b.x, (int)tri.b.y, (int)tri.c.x, (int)tri.c.y);
+                    drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.c.x, (int)tri.c.y);
+                }
+            }
         }
     }
 }

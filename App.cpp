@@ -25,16 +25,19 @@ void App::init(){
     Mesh mesh;
     mesh.setLocation(0,0,10);
     mesh.setRotation(0,0,0);
-    
+    mesh.optimize();
+    mesh.drawWireframe = true;
+
     ReadObj("teapot.obj", mesh);
     
     Mesh plane;
-    plane.setLocation(0,-4,0);
+    plane.setLocation(0,-1,0);
     plane.setRotation(0,0,0);
     ReadObj("plane.obj", plane);
+    plane.drawWireframe = true;
 
     meshes.push_back(mesh);
-    //meshes.push_back(plane);
+    meshes.push_back(plane);
     
     mover = 0;
 
@@ -57,10 +60,17 @@ void App::update(){
     
     cam.yaw = cam.yaw + 0.01*mdx;
     cam.pitch = cam.pitch + 0.01*mdy;
-    //std::cout << "Pitch: " << cam.pitch * 180/M_PI << " Yaw: " << cam.yaw* 180/M_PI << std::endl;
+    if( cam.pitch > 89.0*M_PI/180){
+        cam.pitch = 89.0*M_PI/180;
+    } 
+    if (cam.pitch < -89.0*M_PI/180 ){
+        cam.pitch = -89.0*M_PI/180;
+    }
+    //std::cout << "MY: " << my << std::endl;
+    std::cout << "Pitch: " << cam.pitch * 180/M_PI << " Yaw: " << cam.yaw* 180/M_PI << std::endl;
     mover += 0.001;
     //for( Mesh& mesh_i : meshes) {
-    meshes[0].setRotation(2*sin(mover), 3*cos(mover*2), mover);
+    //meshes[0].setRotation(2*sin(mover), 3*cos(mover*2), mover);
     //}
     
     rasterizer->update();

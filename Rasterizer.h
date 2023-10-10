@@ -2,10 +2,21 @@
 #include "BaseStructures.h"
 #include <math.h>
 //TODO: Implement more efficent drawing algorithms.
+
+struct Plane{
+    Vert norm;
+    float d;
+};
+
+struct ViewFrust{
+    Plane nearPlane, farPlane, leftPlane, rightPlane, upPlane, downPlane;
+};
+
 struct Camera{
     Vert pos;
     float pitch, yaw, roll;
     Vert forward, right, up;
+
 };
 
 class Rasterizer {
@@ -13,7 +24,7 @@ private:
     Matrix4x4 viewMatrix;
     Matrix4x4 projectionMatrix;
     const double zfar = 1024;
-    const double znear = 0.01;
+    const double znear = 0.1;
     double fov;
     int screen_width, screen_height;
     //Location of the camera and screen buffer in memory.
@@ -24,7 +35,11 @@ private:
     Triangle processTriangle(Triangle& vertex, Matrix4x4& mesh_transform);
     
     
-
+    void updateFrustrum();
+    ViewFrust frust;
+    bool isPointInsidePlane(const Vert& point, Plane& frustPlane);
+    bool isTriInsidePlane(Triangle& tri, Plane& frustPlane);
+    bool isTriInsideFrust(Triangle& tri);
     
 public:
     void drawPixel(int x, int y, int r = 255, int g = 255, int b = 255);

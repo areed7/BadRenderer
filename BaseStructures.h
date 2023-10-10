@@ -117,6 +117,7 @@ struct Mesh{
     std::vector<Vert> verts;
     std::vector<std::vector<int>> faces; //Index of verts that are connected (Draw lines for each of these)
     Matrix4x4 transform;
+    bool drawWireframe = false;
 
     void setLocation(double x, double y, double z){
         transform.data[0][3] = x;
@@ -146,9 +147,13 @@ struct Mesh{
         transform.data[2][2] = cp * cy;
         transform.data[3][3] = 1;
     }
+
+    void optimize(){
+        verts.shrink_to_fit();
+        for(auto& face : faces){
+            face.shrink_to_fit();
+        }
+        faces.shrink_to_fit();
+    }
 };
 
-struct plane{
-    Vert norm;
-    float d;
-};
