@@ -1,7 +1,7 @@
 #pragma once
 #include "BaseStructures.h"
 #include <math.h>
-//TODO: Implement more efficent drawing algorithms.
+
 
 struct Plane{
     Vert norm;
@@ -23,9 +23,9 @@ class Rasterizer {
 private:
     Matrix4x4 viewMatrix;
     Matrix4x4 projectionMatrix;
-    const double zfar = 1024;
-    const double znear = 0.1;
-    double fov;
+    const float zfar = 1024;
+    const float znear = 0.1;
+    float fov;
     int screen_width, screen_height;
     //Location of the camera and screen buffer in memory.
     Camera* cam;
@@ -46,6 +46,6 @@ public:
     void drawLine(int x1, int y1, int x2, int y2);
     void update();
     void fillTriangle(Triangle tri, int r, int g, int b);
-    Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, int screen_height);
+    Rasterizer(Camera* cam, float fov, char* buffer, int screen_width, int screen_height);
     void processMesh(Mesh& mesh);
 };

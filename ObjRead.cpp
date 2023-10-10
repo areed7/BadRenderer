@@ -23,7 +23,7 @@ void tokenizer(string input, vector<string>& parsedStr, char token){
         res.push_back(input[i]);
     }
 }
-
+//TODO: Implement reading normal and texture map data. 
 void ReadObj(const char* name, Mesh& m){
     ifstream objFile(name);
     string line;

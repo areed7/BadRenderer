@@ -14,13 +14,13 @@
 const wchar_t* g_szClassName = L"myWindowClass";
 const int screen_width = 1000;
 const int screen_height = 1000;
-double rotate_test = 0;
 unsigned char* frameBuffer;
 
 App* app;
 BITMAPINFO bmpInfo;
 
 //Push the data to the screen.
+//TODO: Implement a better method for pushing the buffer? This is very slow. 
 void PushBuffer(HWND hwnd){
 
    

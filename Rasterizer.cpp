@@ -11,7 +11,7 @@
  * screen_height : Height of the rendering area/screen (Char buffer)
  * 
 */
-Rasterizer::Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, int screen_height){
+Rasterizer::Rasterizer(Camera* cam, float fov, char* buffer, int screen_width, int screen_height){
     this->fov = fov;
     this->screen_width = screen_width;
     this->screen_height = screen_height;
@@ -56,21 +56,22 @@ bool Rasterizer::isTriInsideFrust(Triangle& tri){
         
 }
 
+//TODO: Fix frustum. Issue occurs when camera is close to faces.
 void Rasterizer::updateFrustrum(){
     
-    double fovRad = fov * M_PI / 180;
-    double cosPitch  = cos(cam->pitch);
-    double sinPitch  = sin(cam->pitch);
-    double cosPitchP = cos(cam->pitch + fovRad/2);
-    double sinPitchP = sin(cam->pitch + fovRad/2);
-    double cosPitchN = cos(cam->pitch - fovRad/2);
-    double sinPitchN = sin(cam->pitch - fovRad/2);
-    double cosYaw = cos(cam->yaw);
-    double sinYaw = sin(cam->yaw);
-    double cosYawP = cos(cam->yaw + fovRad/2);
-    double cosYawN = cos(cam->yaw - fovRad/2);
-    double sinYawP = sin(cam->yaw + fovRad/2);
-    double sinYawN = sin(cam->yaw - fovRad/2);
+    float fovRad = fov * M_PI / 180;
+    float cosPitch  = cos(cam->pitch);
+    float sinPitch  = sin(cam->pitch);
+    float cosPitchP = cos(cam->pitch + fovRad/2);
+    float sinPitchP = sin(cam->pitch + fovRad/2);
+    float cosPitchN = cos(cam->pitch - fovRad/2);
+    float sinPitchN = sin(cam->pitch - fovRad/2);
+    float cosYaw = cos(cam->yaw);
+    float sinYaw = sin(cam->yaw);
+    float cosYawP = cos(cam->yaw + fovRad/2);
+    float cosYawN = cos(cam->yaw - fovRad/2);
+    float sinYawP = sin(cam->yaw + fovRad/2);
+    float sinYawN = sin(cam->yaw - fovRad/2);
 
     frust.rightPlane.norm = cam->up.cross(Vert(sinYawP, 0, cosYawP, 0)).normalize();
     frust.rightPlane.d = -cam->pos.dot(frust.rightPlane.norm);
@@ -90,10 +91,10 @@ void Rasterizer::updateFrustrum(){
     frust.farPlane.d     = -frust.farPlane.norm.dot(cam->pos) - zfar*frust.farPlane.norm.length();
 }
 void Rasterizer::updateViewMatrix(){
-    double cosPitch = cos(cam->pitch);
-    double sinPitch = sin(cam->pitch);
-    double cosYaw = cos(cam->yaw);
-    double sinYaw = sin(cam->yaw);
+    float cosPitch = cos(cam->pitch);
+    float sinPitch = sin(cam->pitch);
+    float cosYaw = cos(cam->yaw);
+    float sinYaw = sin(cam->yaw);
 
     cam->forward = Vert(cosPitch * sinYaw, -sinPitch,cosPitch*cosYaw,0);
     //cam->forward = Vert(cosPitch,-sinPitch,0,0);
@@ -143,14 +144,13 @@ void Rasterizer::drawPixel(int x, int y, int r, int g, int b){
     if( x >= screen_width || y >= screen_height || x < 0 || y < 0){
         return;
     }
-    *(screenBuffer + (y*screen_width + x)*3 + 0) = r;
+    *(screenBuffer + (y*screen_width + x)*3 + 0) = b;
     *(screenBuffer + (y*screen_width + x)*3 + 1) = g;
-    *(screenBuffer + (y*screen_width + x)*3 + 2) = b;
+    *(screenBuffer + (y*screen_width + x)*3 + 2) = r;
 }
 
 //Bresenham's line algorithm
 void Rasterizer::drawLine(int x1, int y1, int x2, int y2) {
-    //std::cout << "DrawLine" << std::endl;
     // Check if the line is vertical
     if (x2 == x1) {
         int yStart = std::min(y1, y2);
@@ -162,7 +162,7 @@ void Rasterizer::drawLine(int x1, int y1, int x2, int y2) {
     }
 
     // Calculate slope
-    double slope = static_cast<double>(y2 - y1) / (x2 - x1);
+    float slope = static_cast<float>(y2 - y1) / (x2 - x1);
 
     // Check if the absolute slope is <= 1 (i.e., not too steep)
     if (std::abs(slope) <= 1.0) {
@@ -185,7 +185,6 @@ void Rasterizer::drawLine(int x1, int y1, int x2, int y2) {
             drawPixel(x, y, 255, 0, 0);
         }
     }
-    //std::cout << "End DrawLine" << std::endl;
 }
 
 /*
@@ -206,14 +205,14 @@ Triangle Rasterizer::processTriangle(Triangle& vertex, Matrix4x4& mesh_transform
         v1 = viewMatrix*t1;
         v2 = viewMatrix*t2;
         v3 = viewMatrix*t3;
-
+        //TODO: Implement normal data from the obj file instead of calculating it. 
         Vert norm, l1, l2;
         l1 = v2-v1;
         l2 = v3-v1;
         norm = l1.cross(l2);
         norm = norm.normalize();
         
-        double dot = norm.dot(v1);
+        float dot = norm.dot(v1);
         if(dot < 0.0)
         {
             Vert s1 = projectionMatrix*v1;
@@ -241,10 +240,10 @@ Triangle Rasterizer::processTriangle(Triangle& vertex, Matrix4x4& mesh_transform
 
 //Barycentric Algorithm
 void Rasterizer::fillTriangle(Triangle tri, int r, int g, int b) {
-    int maxX = std::min((double)(screen_width - 1), std::max(tri.a.x, std::max(tri.b.x, tri.c.x)));
-    int minX = std::max(0.0, std::min(tri.a.x, std::min(tri.b.x, tri.c.x)));
-    int maxY = std::min((double)(screen_height - 1), std::max(tri.a.y, std::max(tri.b.y, tri.c.y)));
-    int minY = std::max(0.0, std::min(tri.a.y, std::min(tri.b.y, tri.c.y)));
+    int maxX = std::min((float)(screen_width - 1), std::max(tri.a.x, std::max(tri.b.x, tri.c.x)));
+    int minX = std::max(0.0f, std::min(tri.a.x, std::min(tri.b.x, tri.c.x)));
+    int maxY = std::min((float)(screen_height - 1), std::max(tri.a.y, std::max(tri.b.y, tri.c.y)));
+    int minY = std::max(0.0f, std::min(tri.a.y, std::min(tri.b.y, tri.c.y)));
 
     Vert2D vs1(tri.b.x - tri.a.x, tri.b.y - tri.a.y);
     Vert2D vs2(tri.c.x - tri.a.x, tri.c.y - tri.a.y);
@@ -270,28 +269,25 @@ void Rasterizer::fillTriangle(Triangle tri, int r, int g, int b) {
     }
 }
 
+
 void Rasterizer::processMesh(Mesh& mesh) {
-    //std::cout << "R: " << static_cast<void*>(screenBuffer) << std::endl;
-    for( auto &face_i : mesh.faces){ //Fix this. Appears to fail passing in mesh due to access issue.
-        if( face_i.size() == 3) {
-            //TODO: Update the mesh to store triangles instead?
-            //Probably not, because then I can't process faces with more than three verts.
+    for( auto &face_i : mesh.faces){ //Loop though each mesh
+        if( face_i.size() == 3) { //Check if the face has three verts. (Triangles only)
             Triangle triangle;
             triangle.a = mesh.verts[face_i[0]];
             triangle.b = mesh.verts[face_i[1]];
             triangle.c = mesh.verts[face_i[2]];
             Triangle tri;
-            //std::cout << "Process Triangle" << std::endl;
             tri = processTriangle(triangle, mesh.transform);
-            //std::cout << "End Process Triangle" << std::endl;
-            Vert lightDir(0,0,-1);
-            double l = sqrt(lightDir.x*lightDir.x+lightDir.y*lightDir.y+lightDir.z*lightDir.z);
+
+            Vert lightDir(0,0,-1); //Simple lighting. Looks terrible, but it works for learning.
+            float l = sqrt(lightDir.x*lightDir.x+lightDir.y*lightDir.y+lightDir.z*lightDir.z);
             lightDir.x /= l;
             lightDir.y /= l;
             lightDir.z /= l;
 
-            double dp = tri.norm.x*lightDir.x + tri.norm.y*lightDir.y + tri.norm.z*lightDir.z;
-            fillTriangle(tri,255*dp,255*dp,255*dp);
+            float dp = tri.norm.dot(lightDir.normalize());
+            fillTriangle(tri,255*dp,255*dp,255*dp); //Fill the triangle.
             if( mesh.drawWireframe ){
                 if( !( isnan(tri.a.w)  || isnan(tri.b.w)  || isnan(tri.c.w)) ){
                     drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.b.x, (int)tri.b.y);

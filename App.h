@@ -6,7 +6,7 @@ class App{
     char* buffer;
     Camera cam;
     Rasterizer* rasterizer;
-    double mover;
+    float mover;
     std::vector<Mesh> meshes;
     std::vector<char> keysDown;
 

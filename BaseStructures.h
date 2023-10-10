@@ -15,9 +15,9 @@ struct Vert2D{
 //3D vertex.
 struct Vert{
     
-    double x, y, z, w;
+    float x, y, z, w;
 
-    Vert(double x=0, double y=0, double z=0, double w=0) : x(x), y(y), z(z), w(w){}
+    Vert(float x=0, float y=0, float z=0, float w=0) : x(x), y(y), z(z), w(w){}
     
     Vert operator+(const Vert& other) const{
         return Vert(x+other.x, y+other.y, z+other.z, w+other.w);
@@ -42,12 +42,16 @@ struct Vert{
     Vert operator/(double scalar) const {
         return Vert(x/scalar, y/scalar, z/scalar, w);
     }
+
+    Vert operator/(float scalar) const {
+        return Vert(x/scalar, y/scalar, z/scalar, w);
+    }
     Vert cross(const Vert& other) const{
         return Vert(y*other.z-z*other.y, z*other.x-x*other.z, x*other.y-y*other.x, 0);
     }
 
     Vert normalize() const{
-        double l = sqrt(x*x + y*y + z*z);
+        float l = sqrt(x*x + y*y + z*z);
         if(l!=0){
             return Vert(x/l, y/l, z/l, w);
         } else{
@@ -55,11 +59,11 @@ struct Vert{
         }
     }
 
-    double dot(const Vert& other) const{
+    float dot(const Vert& other) const{
         return x*other.x + y*other.y + z*other.z;
     }
 
-    double length() const{
+    float length() const{
         return sqrt(x*x+y*y+z*z);
     }
 };
@@ -69,7 +73,7 @@ struct Triangle{
 };
 
 struct Matrix4x4{
-    double data[4][4] = {0};
+    float data[4][4] = {0};
 
     Vert operator*(const Vert& other) const{
         return Vert(other.x*data[0][0] + other.y*data[0][1] + other.z*data[0][2] + other.w*data[0][3] ,
@@ -119,20 +123,20 @@ struct Mesh{
     Matrix4x4 transform;
     bool drawWireframe = false;
 
-    void setLocation(double x, double y, double z){
+    void setLocation(float x, float y, float z){
         transform.data[0][3] = x;
         transform.data[1][3] = y;
         transform.data[2][3] = z;
         transform.data[3][3] = 1;
     }
-    void setRotation(double pitch, double yaw, double roll){
+    void setRotation(float pitch, float yaw, float roll){
         
-        double cy = cos(yaw);
-        double cr = cos(roll);
-        double cp = cos(pitch);
-        double sy = sin(yaw);
-        double sr = sin(roll);
-        double sp = sin(pitch);
+        float cy = cos(yaw);
+        float cr = cos(roll);
+        float cp = cos(pitch);
+        float sy = sin(yaw);
+        float sr = sin(roll);
+        float sp = sin(pitch);
 
         transform.data[0][0] = cy * cr;
         transform.data[0][1] = cr * sp * sy - cp * sr;
