@@ -26,7 +26,7 @@ void App::init(){
     mesh.setLocation(0,0,10);
     mesh.setRotation(0,0,0);
     mesh.optimize();
-    mesh.drawWireframe = true;
+    //mesh.drawWireframe = true;
 
     ReadObj("teapot.obj", mesh);
     
@@ -67,7 +67,7 @@ void App::update(){
         cam.pitch = -89.0*M_PI/180;
     }
     //std::cout << "MY: " << my << std::endl;
-    std::cout << "Pitch: " << cam.pitch * 180/M_PI << " Yaw: " << cam.yaw* 180/M_PI << std::endl;
+    //std::cout << "Pitch: " << cam.pitch * 180/M_PI << " Yaw: " << cam.yaw* 180/M_PI << std::endl;
     mover += 0.001;
     //for( Mesh& mesh_i : meshes) {
     //meshes[0].setRotation(2*sin(mover), 3*cos(mover*2), mover);

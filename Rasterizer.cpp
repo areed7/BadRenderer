@@ -36,22 +36,14 @@ Rasterizer::Rasterizer(Camera* cam, double fov, char* buffer, int screen_width, 
 
 bool Rasterizer::isPointInsidePlane(const Vert& point, Plane& frustPlane) {
     
-    if (frustPlane.norm.dot(point) + frustPlane.d > 0) {
-        return false;  // Point is behind one of the planes
-    }
-    return true;  // Point is in front of all the planes
+    return frustPlane.norm.dot(point) + frustPlane.d < 0;
 }
 
 bool Rasterizer::isTriInsidePlane(Triangle& tri, Plane& frustPlane){
-    bool p1InP = isPointInsidePlane(tri.a, frustPlane);
-    bool p1Inp2 = isPointInsidePlane(tri.b, frustPlane);
-    bool p1Inp3 = isPointInsidePlane(tri.c, frustPlane);
-    
-    if(p1InP || p1Inp2 || p1Inp3){
-        return true;
-    } else {
-        return false;
-    }
+    bool A = isPointInsidePlane(tri.a, frustPlane);
+    bool B = isPointInsidePlane(tri.b, frustPlane);
+    bool C = isPointInsidePlane(tri.c, frustPlane);
+    return A||B||C;
 }
 
 bool Rasterizer::isTriInsideFrust(Triangle& tri){
@@ -80,10 +72,10 @@ void Rasterizer::updateFrustrum(){
     double sinYawP = sin(cam->yaw + fovRad/2);
     double sinYawN = sin(cam->yaw - fovRad/2);
 
-    frust.rightPlane.norm = cam->up.cross(Vert(cosPitch * sinYawP, -sinPitch, cosPitch * cosYawP, 0)).normalize();
+    frust.rightPlane.norm = cam->up.cross(Vert(sinYawP, 0, cosYawP, 0)).normalize();
     frust.rightPlane.d = -cam->pos.dot(frust.rightPlane.norm);
 
-    frust.leftPlane.norm = Vert(cosPitch * sinYawN, -sinPitch, cosPitch * cosYawN, 0).cross(cam->up).normalize();
+    frust.leftPlane.norm = Vert(sinYawN, 0, cosYawN, 0).cross(cam->up).normalize();
     frust.leftPlane.d = -cam->pos.dot(frust.leftPlane.norm);
     
     frust.upPlane.norm = (Vert(cosPitchN * sinYaw, -sinPitchN, cosPitchN * cosYaw, 0).cross(cam->right)).normalize();
@@ -299,7 +291,7 @@ void Rasterizer::processMesh(Mesh& mesh) {
             lightDir.z /= l;
 
             double dp = tri.norm.x*lightDir.x + tri.norm.y*lightDir.y + tri.norm.z*lightDir.z;
-            //fillTriangle(tri,255*dp,255*dp,255*dp);
+            fillTriangle(tri,255*dp,255*dp,255*dp);
             if( mesh.drawWireframe ){
                 if( !( isnan(tri.a.w)  || isnan(tri.b.w)  || isnan(tri.c.w)) ){
                     drawLine((int)tri.a.x, (int)tri.a.y, (int)tri.b.x, (int)tri.b.y);
